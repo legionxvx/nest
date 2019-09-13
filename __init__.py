@@ -1,10 +1,7 @@
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-formatter = logging.Formatter("[%(threadName)14s %(asctime)s %(relativeCreated)6d %(funcName)14s] - %(message)s")
-
-trfh = TimedRotatingFileHandler('logs/%s.log' % __name__, when='midnight', backupCount=14)
-trfh.setFormatter(formatter)
+trfh = TimedRotatingFileHandler(f'logs/{__name__}.log' % __name__, when='midnight', backupCount=14)
 
 loggers = {
     __name__:logging.INFO,
