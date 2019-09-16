@@ -9,14 +9,11 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
-    func,
-    case,
-    cast,
     select,
     distinct,
     Table,
+    join,
     create_engine,
-    join
 )
 
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -24,13 +21,12 @@ from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import text
 
 Base = declarative_base()
 
 association_table = Table('associations', Base.metadata,
-    Column('left_id', Integer, ForeignKey('orders.id')),
-    Column('right_id', Integer, ForeignKey('products.id'))
+    Column('order_id',   Integer, ForeignKey('orders.id')),
+    Column('product_id', Integer, ForeignKey('products.id'))
 )
 
 class User(Base):
@@ -61,9 +57,8 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
-                            where(Order.id == association_table.c.left_id).\
-                                where(Product.id == association_table.c.right_id)
-
+                        where(Order.id == association_table.c.order_id).\
+                        where(Product.id == association_table.c.product_id)
         return statement.label('products')
 
 class Order(Base):
@@ -78,7 +73,8 @@ class Order(Base):
     path         = Column(Text)
     coupon       = Column(Text)
 
-    user_id  = Column(Integer, ForeignKey("users.id", onupdate="cascade", ondelete="cascade"), index=True)
+    user_id  = Column(Integer, ForeignKey("users.id", onupdate="cascade",\
+                                           ondelete="cascade"), index=True)
     products = relationship("Product", secondary=association_table,
                             back_populates="orders")
 
