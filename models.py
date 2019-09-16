@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from json import loads
 
 from sqlalchemy import (
     Column,
