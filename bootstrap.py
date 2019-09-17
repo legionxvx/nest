@@ -16,14 +16,14 @@ def bootstrap():
             except:
                 continue
 
-            product = session.query(Product).filter_by(name=info.get("name")).first()
+            product = session.query(Product).\
+                        filter_by(name=info.get("name")).first()
 
-            #create the product
             if not(product):
-                product = Product(name=info.get("name"), aliases=info.get("aliases"))
-                session.add(product)
-            #update the product
+                product = Product(**info)
             elif product:
-                product.aliases = info.get("aliases")
+                bl = ["name"]
+                [setattr(product, k, v) for k, v in info.items() if not(k in bl)]
             session.add(product)
     session.commit()
+    TheEngine.remove()
