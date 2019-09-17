@@ -1,6 +1,6 @@
 from sqlalchemy.engine.url import URL
-from sqlalchemy.orm import scoped_session
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
 
 from nest.models import Base
