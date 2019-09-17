@@ -10,9 +10,6 @@ from sqlalchemy import (
     ForeignKey,
     select,
     distinct,
-    Table,
-    join,
-    create_engine,
 )
 
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -71,16 +68,17 @@ class User(Base):
 class Order(Base):
     __tablename__ = "orders"
 
-    id           = Column(Integer, primary_key=True)
-    reference    = Column(Text, unique=True, nullable=False)
-    created      = Column(DateTime, nullable=False)
-    date         = Column(DateTime, nullable=False)
-    total        = Column(Float, default=0.0)
-    discount     = Column(Float, default=0.0)
-    path         = Column(Text)
-    coupon       = Column(Text)
+    id        = Column(Integer, primary_key=True)
+    reference = Column(Text, unique=True, nullable=False)
+    created   = Column(DateTime, nullable=False)
+    date      = Column(DateTime, nullable=False)
+    live      = Column(Boolean, nullable=False)
+    total     = Column(Float, default=0.0)
+    discount  = Column(Float, default=0.0)
+    path      = Column(Text)
+    coupon    = Column(Text)
 
-    user_id  = Column(
+    user_id = Column(
         Integer, 
         ForeignKey("users.id", onupdate="cascade", ondelete="cascade"), 
         index=True
