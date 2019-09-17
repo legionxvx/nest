@@ -91,7 +91,9 @@ class Product(Base):
 
     id      = Column(Integer, primary_key=True)
     name    = Column(Text, unique=True, nullable=False)
-    aliases = Column(ARRAY(Text, dimensions=1))
+    aliases = Column(ARRAY(Text, dimensions=1), nullable=False)
+    price   = Column(Float, nullable=False)
+    set     = Column(Text, nullable=False)
 
     orders = relationship("Order", secondary="order_product_associations", 
                           back_populates="products", cascade="save-update")
