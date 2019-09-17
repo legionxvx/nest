@@ -23,9 +23,9 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-association_table = Table('associations', Base.metadata,
-    Column('order_id',   Integer, ForeignKey('orders.id')),
-    Column('product_id', Integer, ForeignKey('products.id'))
+association_table = Table("associations", Base.metadata,
+    Column("order_id",   Integer, ForeignKey("orders.id",   onupdate="cascade", ondelete="cascade")),
+    Column("product_id", Integer, ForeignKey("products.id", onupdate="cascade", ondelete="cascade"))
 )
 
 class User(Base):
@@ -75,14 +75,14 @@ class Order(Base):
     user_id  = Column(Integer, ForeignKey("users.id", onupdate="cascade",\
                                            ondelete="cascade"), index=True)
     products = relationship("Product", secondary=association_table,
-                            back_populates="orders")
+                            back_populates="orders", cascade="save-update")
 
 class Product(Base):
     __tablename__ = "products"
 
     id      = Column(Integer, primary_key=True)
     name    = Column(Text, unique=True, nullable=False)
-    aliases = Column(ARRAY(Text))
+    aliases = Column(ARRAY(Text, dimensions=1))
 
     orders = relationship("Order", secondary=association_table,
-                          back_populates="products")
+                          back_populates="products", cascade="save-update")
