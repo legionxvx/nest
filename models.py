@@ -23,10 +23,18 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-association_table = Table("associations", Base.metadata,
-    Column("order_id",   Integer, ForeignKey("orders.id",   onupdate="cascade", ondelete="cascade")),
-    Column("product_id", Integer, ForeignKey("products.id", onupdate="cascade", ondelete="cascade"))
-)
+class OrderProductAssociation(Base):
+    __tablename__ = "order_product_associations"
+    order_id = Column(
+        Integer, 
+        ForeignKey("orders.id", onupdate="cascade", ondelete="cascade"),
+        primary_key=True
+    )
+    product_id = Column(
+        Integer, 
+        ForeignKey("products.id", onupdate="cascade", ondelete="cascade"),
+        primary_key=True
+    )
 
 class User(Base):
     __tablename__ = "users"
@@ -56,8 +64,8 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
-                        where(Order.id == association_table.c.order_id).\
-                        where(Product.id == association_table.c.product_id)
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
 
 class Order(Base):
@@ -72,9 +80,12 @@ class Order(Base):
     path         = Column(Text)
     coupon       = Column(Text)
 
-    user_id  = Column(Integer, ForeignKey("users.id", onupdate="cascade",\
-                                           ondelete="cascade"), index=True)
-    products = relationship("Product", secondary=association_table,
+    user_id  = Column(
+        Integer, 
+        ForeignKey("users.id", onupdate="cascade", ondelete="cascade"), 
+        index=True
+    )
+    products = relationship("Product", secondary="order_product_associations", 
                             back_populates="orders", cascade="save-update")
 
 class Product(Base):
@@ -84,5 +95,5 @@ class Product(Base):
     name    = Column(Text, unique=True, nullable=False)
     aliases = Column(ARRAY(Text, dimensions=1))
 
-    orders = relationship("Order", secondary=association_table,
+    orders = relationship("Order", secondary="order_product_associations", 
                           back_populates="products", cascade="save-update")
