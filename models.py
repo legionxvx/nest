@@ -23,12 +23,12 @@ Base = declarative_base()
 class OrderProductAssociation(Base):
     __tablename__ = "order_product_associations"
     order_id = Column(
-        Integer, 
+        Integer,
         ForeignKey("orders.id", onupdate="cascade", ondelete="cascade"),
         primary_key=True
     )
     product_id = Column(
-        Integer, 
+        Integer,
         ForeignKey("products.id", onupdate="cascade", ondelete="cascade"),
         primary_key=True
     )
@@ -79,11 +79,11 @@ class Order(Base):
     coupon    = Column(Text)
 
     user_id = Column(
-        Integer, 
-        ForeignKey("users.id", onupdate="cascade", ondelete="cascade"), 
+        Integer,
+        ForeignKey("users.id", onupdate="cascade", ondelete="cascade"),
         index=True
     )
-    products = relationship("Product", secondary="order_product_associations", 
+    products = relationship("Product", secondary="order_product_associations",
                             back_populates="orders", cascade="save-update")
 
 class Product(Base):
@@ -95,5 +95,5 @@ class Product(Base):
     price   = Column(Float, nullable=False)
     set     = Column(Text, nullable=False)
 
-    orders = relationship("Order", secondary="order_product_associations", 
+    orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")
