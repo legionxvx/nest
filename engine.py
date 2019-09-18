@@ -1,3 +1,5 @@
+from os import environ
+
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
@@ -5,19 +7,20 @@ from sqlalchemy import create_engine
 
 from nest.models import Base
 
-DB_INFO = {
-    'drivername': 'postgres',
-    'host': '',
-    'port': '',
-    'username': '',
-    'password': '',
-    'database': ''
-}
-
 class Engine(object):
 
-    def __init__(self, URL=URL(**DB_INFO), echo=True):
-        self.engine = create_engine(URL, echo=echo)
+    def __init__(self, url=None, echo=True):
+        conn_info = {
+            "drivername": 'postgres',
+            "host": environ.get("PG_HOST"),
+            "port": environ.get("PG_PORT"),
+            "username": environ.get("PG_USER"),
+            "password": environ.get("PG_PASS"),
+            "database": environ.get("PG_DATABASE")
+        }
+
+        self.url = url or URL(**conn_info)
+        self.engine = create_engine(self.url, echo=echo)
 
         Base.metadata.create_all(self.engine)
 
