@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     select,
     distinct,
+    func
 )
 
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -64,6 +65,34 @@ class User(Base):
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
+
+    @hybrid_property
+    def earliest_order_date(self):
+        if len(self.orders) > 0:
+            return min([order.date for order in self.orders])
+        return datetime.date(1970, 1, 1)
+
+    @earliest_order_date.expression
+    def earliest_order_date(cls):
+        _xpr = func.min(Order.date)
+        return select([_xpr]).where(Order.user_id == cls.id).label('min_date')
+
+    @hybrid_property
+    def owns_any_paid(self):
+        for order in self.orders:
+            for product in order.products:
+                if product.price > 0:
+                    return True
+        return False
+
+    @owns_any_paid.expression
+    def owns_any_paid(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.price > 0)
+        return statement.label("any-paid")
 
 class Order(Base):
     __tablename__ = "orders"
