@@ -5,6 +5,21 @@ from yaml import load
 from .engine import TheEngine
 from .models import Product
 
+def products():
+    path = Path() / "products"
+
+    products = []
+    for file in path.glob("*.yaml"):
+        with open(file) as f:
+            try:
+                info = load(f)
+                name = info.get("name")
+                if name is not None:
+                    products.append(name)
+            except:
+                continue
+    return products
+
 def bootstrap():
     path = Path() / "products"
 
