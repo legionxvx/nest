@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from yaml import load
+from yaml import load, FullLoader
 
 from .engine import TheEngine
 from .models import Product
@@ -27,7 +27,7 @@ def bootstrap():
     for file in path.glob("*.yaml"):
         with open(file) as f:
             try:
-                info = load(f)
+                info = load(f, Loader=FullLoader)
             except:
                 continue
 
