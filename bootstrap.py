@@ -1,9 +1,36 @@
 from pathlib import Path
+from os import environ
+from collections import defaultdict
 
-from yaml import load, FullLoader
+from yaml import load, dump, FullLoader
 
 from .engine import TheEngine
 from .models import Product
+from .sessions import FastSpring
+
+def fs_update_yaml_definitions():
+    """Update yaml defines per the current state of FastSpring"""
+    fastspring = FastSpring()
+
+    parent_info = fastspring.get_parents()
+
+    path = Path() / "products"
+    for file in path.glob("*.yaml"):
+        with open(file, "r+") as f:
+            try:
+                info = load(f, Loader=FullLoader)
+            except:
+                continue
+
+            for alias in info.get("aliases", []):
+                if alias in parent_info:
+                    info["aliases"] = parent_info[alias]
+                    f.seek(0)
+                    f.write("")
+                    f.truncate()
+                    dump(info, f)
+                    break
+    return products
 
 def products():
     path = Path() / "products"
@@ -21,6 +48,7 @@ def products():
     return products
 
 def bootstrap():
+    fs_update_yaml_definitions()
     path = Path() / "products"
 
     session = TheEngine.new_session()
