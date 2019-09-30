@@ -11,7 +11,7 @@ class Engine(object):
 
     def __init__(self, url=None, echo=True):
         conn_info = {
-            "drivername": 'postgres',
+            "drivername": "postgresql",
             "host": environ.get("PG_HOST"),
             "port": environ.get("PG_PORT"),
             "username": environ.get("PG_USER"),
