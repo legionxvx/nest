@@ -25,6 +25,11 @@ def fs_update_yaml_definitions():
             for alias in info.get("aliases", []):
                 if alias in parent_info:
                     info["aliases"] = parent_info[alias]
+
+                    #the parent is also an alias
+                    if not(alias in info["aliases"]):
+                        info["aliases"].append(alias)
+
                     f.seek(0)
                     f.write("")
                     f.truncate()
