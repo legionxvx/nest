@@ -14,7 +14,7 @@ def fs_update_yaml_definitions():
 
     parent_info = fastspring.get_parents()
 
-    path = Path() / "products"
+    path = Path(__file__).parent / "products"
     for file in path.glob("*.yaml"):
         with open(file, "r+") as f:
             try:
@@ -33,7 +33,7 @@ def fs_update_yaml_definitions():
     return products
 
 def products():
-    path = Path() / "products"
+    path = Path(__file__).parent / "products"
 
     products = []
     for file in path.glob("*.yaml"):
@@ -49,7 +49,7 @@ def products():
 
 def bootstrap():
     fs_update_yaml_definitions()
-    path = Path() / "products"
+    path = Path(__file__).parent / "products"
 
     session = TheEngine.new_session()
     for file in path.glob("*.yaml"):
