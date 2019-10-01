@@ -106,6 +106,7 @@ class Order(Base):
     discount  = Column(Float, default=0.0)
     path      = Column(Text)
     coupon    = Column(Text)
+    name      = Column(Text)
 
     user_id = Column(
         Integer,
