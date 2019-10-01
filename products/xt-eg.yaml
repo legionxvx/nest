@@ -1,4 +1,6 @@
+aliases:
+- xt-eg-offer
+- xt-eg
 name: XT-EG
-aliases: [plugin_xt_eg, xt-eg, xt-eg-offer]
 price: 29
 set: XT

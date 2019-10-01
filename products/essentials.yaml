@@ -1,4 +1,6 @@
+aliases:
+- xt-plugin-essentials-offer
+- xt-plugin-essentials
 name: Plugin Essentials
-aliases: [Plugin Essentials License, xt-plugin-essentials, xt-plugin-essentials-offer]
 price: 29
 set: XT
