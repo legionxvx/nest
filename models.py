@@ -53,8 +53,8 @@ class User(Base):
         products = []
         for order in self.orders:
             for product in order.products:
-                if not(product.name in products):
-                    products.append(product.name)
+                if not(product in products):
+                    products.append(product)
         return products
 
     @products.expression
@@ -124,6 +124,7 @@ class Product(Base):
     aliases = Column(ARRAY(Text, dimensions=1), nullable=False)
     price   = Column(Float, nullable=False)
     set     = Column(Text, nullable=False)
+    signer  = Column(Text)
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")
