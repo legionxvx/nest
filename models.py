@@ -125,6 +125,7 @@ class Product(Base):
     price   = Column(Float, nullable=False)
     set     = Column(Text, nullable=False)
     signer  = Column(Text)
+    token   = Column(Text)
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")
