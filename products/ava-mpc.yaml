@@ -3,3 +3,4 @@ aliases: [ava-mpc, mpc-channelstrip]
 price: 1
 set: AVA
 signer: neon
+token: MPC
