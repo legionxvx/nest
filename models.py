@@ -126,6 +126,7 @@ class Product(Base):
     set     = Column(Text, nullable=False)
     signer  = Column(Text)
     token   = Column(Text)
+    part    = Column(Text)
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")
