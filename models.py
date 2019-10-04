@@ -127,6 +127,7 @@ class Product(Base):
     signer  = Column(Text)
     token   = Column(Text)
     part    = Column(Text)
+    current = Column(Boolean)
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")

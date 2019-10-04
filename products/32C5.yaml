@@ -10,3 +10,4 @@ set: 32C
 signer: neon
 token: 32c5
 part: mixbus32c-5
+current: true
