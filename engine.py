@@ -1,6 +1,7 @@
 from os import environ
 
 from sqlalchemy.engine.url import URL
+from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
@@ -35,8 +36,7 @@ class Engine(object):
                                                 session
         """
         #call the session registry
-        self.session = self.session_registry()
-        return self.session
+        return self.session_registry()
 
     def remove(self):
         """Threads that call this method will have their local session
