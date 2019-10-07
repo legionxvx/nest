@@ -7,3 +7,5 @@ set: XT
 signer: helium
 token: D
 part: xt_ds
+legacy_aliases:
+  - plugin_xt_ds

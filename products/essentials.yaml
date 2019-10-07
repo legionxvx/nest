@@ -7,3 +7,5 @@ set: XT
 signer: helium
 token: E
 part: essentials
+legacy_aliases:
+  - Plugin Essentials License
