@@ -70,7 +70,7 @@ def bootstrap():
             if not(product):
                 product = Product(**info)
             elif product:
-                bl = ["name"]
+                bl = ["name", "legacy_aliases"]
                 [setattr(product, k, v) for k, v in info.items() if not(k in bl)]
             session.add(product)
     session.commit()
