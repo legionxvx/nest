@@ -116,6 +116,22 @@ class Order(Base):
     products = relationship("Product", secondary="order_product_associations",
                             back_populates="orders", cascade="save-update")
 
+    returns = relationship("Return", back_populates="order", 
+                           cascade="save-update")
+
+class Return(Base):
+    __tablename__ = "returns"
+
+    id = Column(Integer, primary_key=True)
+    
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id", onupdate="cascade", ondelete="cascade"),
+        primary_key=True
+    )
+    order = relationship("Order", back_populates="returns", 
+                         cascade="save-update")
+
 class Product(Base):
     __tablename__ = "products"
 
