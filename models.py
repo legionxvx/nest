@@ -17,6 +17,7 @@ from sqlalchemy.dialects.postgresql.array import ARRAY
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.schema import Sequence
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -122,7 +123,7 @@ class Order(Base):
 class Return(Base):
     __tablename__ = "returns"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Sequence("returns_seq"), primary_key=True)
     
     order_id = Column(
         Integer,
