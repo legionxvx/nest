@@ -124,6 +124,7 @@ class Return(Base):
     __tablename__ = "returns"
 
     id = Column(Integer, Sequence("returns_seq"), primary_key=True)
+    reference = Column(Text, unique=True, nullable=False)
     
     order_id = Column(
         Integer,
