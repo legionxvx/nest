@@ -68,6 +68,13 @@ def bootstrap():
                         filter_by(name=info.get("name")).first()
 
             if not(product):
+                bl = ["legacy_aliases"]
+                
+                try:
+                    [info.pop(i) for i in bl]
+                except KeyError:
+                    pass
+
                 product = Product(**info)
             elif product:
                 bl = ["name", "legacy_aliases"]
