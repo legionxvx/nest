@@ -8,3 +8,4 @@ set: AVA
 signer: neon
 token: AVA-LegacyQ
 part: ava_legacyq
+current: true

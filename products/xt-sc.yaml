@@ -10,3 +10,4 @@ token: sc
 part: xt_sc
 legacy_aliases:
   - plugin_xt_sc
+current: true

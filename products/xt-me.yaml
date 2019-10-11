@@ -10,3 +10,4 @@ token: M
 part: xt_me
 legacy_aliases:
   - plugin_xt_me
+current: true

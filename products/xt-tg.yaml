@@ -9,3 +9,4 @@ token: t
 part: xt_tg
 legacy_aliases:
   - plugin_xt_tg
+current: true

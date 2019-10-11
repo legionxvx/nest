@@ -7,6 +7,6 @@ set: XT
 signer: helium
 token: Q
 part: xt_eq
-
 legacy_aliases:
   - plugin_graphic10
+current: true

@@ -5,3 +5,4 @@ set: AVA
 signer: neon
 token: MPC
 part: mpc
+current: true

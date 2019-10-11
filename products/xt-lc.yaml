@@ -9,3 +9,4 @@ token: LC
 part: xt_lc
 legacy_aliases:
   - plugin_xt_lc
+current: true

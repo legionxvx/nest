@@ -9,3 +9,4 @@ token: c
 part: xt_bc3
 legacy_aliases:
   - plugin_xt_bc3
+current: true

@@ -8,3 +8,4 @@ set: AVA
 signer: neon
 token: AVA-DS
 part: ava_ds
+current: true

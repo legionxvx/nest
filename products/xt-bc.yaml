@@ -7,3 +7,4 @@ token: B
 part: xt_bc
 legacy_aliases:
   - plugin_xt_bc
+current: true
