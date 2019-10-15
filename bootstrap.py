@@ -44,7 +44,7 @@ def products():
     for file in path.glob("*.yaml"):
         with open(file) as f:
             try:
-                info = load(f)
+                info = load(f, FullLoader)
                 name = info.get("name")
                 if name is not None:
                     products.append(name)
