@@ -71,7 +71,7 @@ class User(Base):
     def earliest_order_date(self):
         if len(self.orders) > 0:
             return min([order.date for order in self.orders])
-        return datetime.date(1970, 1, 1)
+        return datetime(1970, 1, 1)
 
     @earliest_order_date.expression
     def earliest_order_date(cls):
