@@ -44,4 +44,7 @@ class Engine(object):
         """
         self.session_registry.remove()
 
+    def set_echo(self, yn):
+        self.engine.echo = bool(yn)
+
 TheEngine = Engine()

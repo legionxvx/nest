@@ -33,6 +33,29 @@ class FastSpring(Session):
         """
         joined_ids = ",".join(products)
         return self.get(f"products/{joined_ids}")
+
+    def get_orders(self, **kwargs):
+        res = self.get("orders", params=kwargs)
+        res.raise_for_status()
+        
+        try:
+            data = res.json()
+        except:
+            yield []
+
+        yield data.get("orders")
+        
+        while data.get("nextPage"):
+            page = data.get("nextPage")
+            res = self.get("orders", params={**kwargs, "page":page})
+            res.raise_for_status()
+
+            try:
+                data = res.json()
+            except:
+                yield []
+
+            yield data.get("orders")
     
     def get_parents(self, with_bundles=False):
         """Get information about "parent" products and their children
