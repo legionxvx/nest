@@ -1,0 +1,9 @@
+aliases:
+- xt-sp
+name: XT-SP
+price: 49
+set: XT
+signer: helium
+token: XTSP
+part: xt_sp
+current: true
