@@ -4,13 +4,14 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 
+from . import logger
 from nest.models import Base
 
 class Engine(object):
 
-    def __init__(self, url=None, echo=True):
+    def __init__(self, url=None, echo=False):
         conn_info = {
             "drivername": "postgresql",
             "host": environ.get("PG_HOST"),
@@ -39,6 +40,7 @@ class Engine(object):
                                                 session
         """
         #call the session registry
+        logger.debug("Checked out new database session.")
         return self.session_registry()
 
     def remove(self):
@@ -51,3 +53,7 @@ class Engine(object):
         self.engine.echo = bool(yn)
 
 TheEngine = Engine()
+
+@event.listens_for(TheEngine.session_factory, 'after_commit')
+def receive_after_commit(session):
+    logger.debug("Received commit.")

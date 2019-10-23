@@ -2,83 +2,91 @@ from pathlib import Path
 from os import environ
 from collections import defaultdict
 
-from yaml import load, dump, FullLoader
+from yaml import safe_load, dump, YAMLError
 
+from . import logger
 from .engine import TheEngine
 from .models import Product
 from .sessions import FastSpring
 
-def fs_update_yaml_definitions():
-    """Update yaml defines per the current state of FastSpring"""
-    fastspring = FastSpring()
-
-    parent_info = fastspring.get_parents()
-
-    path = Path(__file__).parent / "products"
-    for file in path.glob("*.yaml"):
-        with open(file, "r+") as f:
-            try:
-                info = load(f, Loader=FullLoader)
-            except:
-                continue
-
-            for alias in info.get("aliases", []):
-                if alias in parent_info:
-                    info["aliases"] = parent_info[alias]
-
-                    #the parent is also an alias
-                    if not(alias in info["aliases"]):
-                        info["aliases"].append(alias)
-
-                    f.seek(0)
-                    f.write("")
-                    f.truncate()
-                    dump(info, f)
-                    break
-    return products
-
-def products():
+def products(include_path=False):
+    """Get product information from the products dir
+    
+    Keyword Arguments:
+        include_path {bool} -- Also include the path for each product 
+                               definition (default: {False})
+    
+    Returns:
+        [dict] -- A dict with the layout {name: {info}}
+    """
     path = Path(__file__).parent / "products"
 
-    products = []
+    products = {}
     for file in path.glob("*.yaml"):
         with open(file) as f:
             try:
-                info = load(f, FullLoader)
+                info = safe_load(f)
                 name = info.get("name")
                 if name is not None:
-                    products.append(name)
-            except:
-                continue
+                    if include_path:
+                        info["path"] = info.get("path", file.resolve())
+                    products[name] = info
+            except (YAMLError, AttributeError) as error:
+                logger.error(f"Could not load {file.resolve()}: {error}. "
+                             "Is it malformed?")
+    return products
+
+def fs_update_yaml_definitions():
+    """Update yaml defines per the current state of FastSpring"""
+    
+    logger.info("Updating YAML definitions per FastSpring.")
+
+    parent_info = FastSpring(close=True).get_parents()
+    for _, info in products(include_path=True).items():
+        for alias in info.get("aliases", []):
+            if alias in parent_info:
+                #check the new set of definitions 
+                #against the old set of definitions
+                _new = set(parent_info[alias])
+                _old = set(info.get("aliases", []))
+                if _new.issubset(_old):
+                    logger.debug(f"Skipping {info.get('name')}")
+                    continue
+
+                logger.info(f"Updating {info.get('name')}")
+                info["aliases"] = parent_info[alias]
+
+                #the parent product is also an alias
+                if not(alias in info["aliases"]):
+                    info["aliases"].append(alias)
+
+                path = info.get("path", "")
+                with open(path, "w") as f:
+                    info.pop("path")
+                    dump(info, f)
     return products
 
 def bootstrap():
     fs_update_yaml_definitions()
-    path = Path(__file__).parent / "products"
 
     session = TheEngine.new_session()
-    for file in path.glob("*.yaml"):
-        with open(file) as f:
-            try:
-                info = load(f, Loader=FullLoader)
-            except:
-                continue
-
+    for name, info in products().items():
             product = session.query(Product).\
-                        filter_by(name=info.get("name")).first()
-
+                        filter_by(name=name).first()
             if not(product):
                 bl = ["legacy_aliases"]
                 
                 try:
                     [info.pop(i) for i in bl]
-                except KeyError:
+                except (KeyError):
                     pass
 
                 product = Product(**info)
+                logger.info(f"Created new product: {product.name}")
             elif product:
                 bl = ["name", "legacy_aliases"]
                 [setattr(product, k, v) for k, v in info.items() if not(k in bl)]
             session.add(product)
-    session.commit()
+    if len(session.dirty) > 0 or len(session.new) > 0:
+        session.commit()    
     TheEngine.remove()
