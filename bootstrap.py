@@ -1,5 +1,6 @@
 from pathlib import Path
-from os import environ
+from os import environ, remove
+from os.path import exists
 from collections import defaultdict
 
 from yaml import safe_load, dump, YAMLError
@@ -66,7 +67,27 @@ def fs_update_yaml_definitions():
                     dump(info, f)
     return products
 
+def lock():
+    file = "/tmp/bootstrap.lock"
+    if not(exists(file)):
+        with open(file, "w") as file:
+            file.write("")
+        logger.debug("Locking bootstrap process.")
+        return True
+    return False
+
+def unlock():
+    file = "/tmp/bootstrap.lock"
+    if exists(file):
+        remove(file)
+        logger.debug("Unlocking bootstrap process.")
+
 def bootstrap():
+    if not(lock()):
+        logger.debug("Skipping because some other instance of bootstrap is "
+                     "running.")
+        return
+
     fs_update_yaml_definitions()
 
     session = TheEngine.new_session()
@@ -90,3 +111,4 @@ def bootstrap():
     if len(session.dirty) > 0 or len(session.new) > 0:
         session.commit()    
     TheEngine.remove()
+    unlock()
