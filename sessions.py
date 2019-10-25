@@ -1,8 +1,11 @@
 from os import environ
 from urllib.parse import urljoin
 from collections import defaultdict
+from json import JSONDecodeError
 
-from requests import Session
+from requests import Session, HTTPError
+
+from . import logger
 
 class FastSpring(Session):
     """Custom session with FastSpring's API prefixed"""
@@ -37,25 +40,32 @@ class FastSpring(Session):
 
     def get_orders(self, **kwargs):
         res = self.get("orders", params=kwargs)
-        res.raise_for_status()
-        
+
         try:
+            res.raise_for_status()
             data = res.json()
-        except:
-            yield []
+        except (HTTPError) as error:
+            logger.error(f"Could not get orders: {error}")
+            return []
+        except (JSONDecodeError) as error:
+            logger.error(f"Could not decode response JSON: {error}")
+            return []
 
         yield data.get("orders")
         
         while data.get("nextPage"):
             page = data.get("nextPage")
             res = self.get("orders", params={**kwargs, "page":page})
-            res.raise_for_status()
-
             try:
+                res.raise_for_status()
                 data = res.json()
-            except:
+            except (HTTPError) as error:
+                logger.error(f"Could not get orders on page {page}: {error}")
                 yield []
-
+            except (JSONDecodeError) as error:
+                logger.error(f"Could not decode response JSON on page {page}: "
+                             f"{error}")
+                yield []
             yield data.get("orders")
     
     def get_parents(self, with_bundles=False):
@@ -71,28 +81,34 @@ class FastSpring(Session):
         """
         products = []
         res = self.get_products_list()
-        res.raise_for_status()
 
-        if res.ok:
-            try:
-                json_data = res.json()
-                products.extend(json_data.get("products", []))
-            except:
-                pass
+        try:
+            res.raise_for_status()
+            json_data = res.json()
+            products.extend(json_data.get("products", []))
+        except (HTTPError) as error:
+            logger.error(f"Could not get products list: {error}")
+            return {}
+        except (JSONDecodeError) as error:
+            logger.error(f"Could not decode response JSON: {error}")
+            return {}
 
         if len(products) == 0:
             return {}
 
         res = self.get_products(products)
-        res.raise_for_status()
 
         data = []
-        if res.ok:
-            try:
-                json_data = res.json()
-                data.extend(json_data.get("products", []))
-            except:
-                pass
+        try:
+            res.raise_for_status()
+            json_data = res.json()
+            data.extend(json_data.get("products", []))
+        except (HTTPError) as error:
+            logger.error(f"Could not get product data: {error}")
+            return {}
+        except (JSONDecodeError) as error:
+            logger.error(f"Could not decode response JSON: {error}")
+            return {}
 
         parent_information = defaultdict(list)
         for info in data:
