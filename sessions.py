@@ -32,7 +32,8 @@ class FastSpring(Session):
             products {list} -- Product ID's
         """
         joined_ids = ",".join(products)
-        return self.get(f"products/{joined_ids}")
+        url = urljoin("products/", joined_ids)
+        return self.get(url)
 
     def get_orders(self, **kwargs):
         res = self.get("orders", params=kwargs)
