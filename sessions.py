@@ -51,7 +51,7 @@ class FastSpring(Session):
             logger.error(f"Could not decode response JSON: {error}")
             return []
 
-        yield data.get("orders")
+        yield data.get("orders", [])
         
         while data.get("nextPage"):
             page = data.get("nextPage")
