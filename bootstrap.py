@@ -6,7 +6,6 @@ from collections import defaultdict
 from yaml import safe_load, dump, YAMLError
 
 from . import logger
-from .engine import TheEngine
 from .models import Product
 from .sessions import FastSpring
 
@@ -82,11 +81,22 @@ def unlock():
         remove(file)
         logger.debug("Unlocking bootstrap process.")
 
+def blueprint_safe():
+    file = "/tmp/bootstrap.lock"
+    if exists(file):
+        return False
+    else:
+        return True
+
 def bootstrap():
+    logger.info("Bootstrapping engine and products")
     if not(lock()):
         logger.debug("Skipping because some other instance of bootstrap is "
                      "running.")
         return
+    
+    #first past the post gets to create the engine
+    from .engine import TheEngine
 
     fs_update_yaml_definitions()
 
@@ -112,3 +122,4 @@ def bootstrap():
         session.commit()    
     TheEngine.remove()
     unlock()
+    logger.info("Finished bootstrapping process.")
