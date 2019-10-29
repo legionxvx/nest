@@ -1,7 +1,7 @@
-from pathlib import Path
+from collections import defaultdict
 from os import environ, remove
 from os.path import exists
-from collections import defaultdict
+from pathlib import Path
 
 from yaml import safe_load, dump, YAMLError
 
