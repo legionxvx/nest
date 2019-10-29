@@ -24,10 +24,11 @@ class Engine(object):
         self.url = url or URL(**conn_info)
         
         try:
+            logger.info(f"Creating engine with metadata {Base.metadata}")
             self.engine = create_engine(self.url, echo=echo)
             Base.metadata.create_all(self.engine)
         except (SQLAlchemyError) as error:
-            print(f"Cannot create engine: {error}")
+            logger.critical(f"Cannot create engine: {error}")
 
         self.session_factory  = sessionmaker(bind=self.engine)
         self.session_registry = scoped_session(self.session_factory)
