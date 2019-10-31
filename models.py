@@ -117,7 +117,7 @@ class Order(Base):
     products = relationship("Product", secondary="order_product_associations",
                             back_populates="orders", cascade="save-update")
 
-    returns = relationship("Return", back_populates="order", 
+    returns = relationship("Return", back_populates="order",
                            cascade="save-update")
 
 class Return(Base):
@@ -125,13 +125,13 @@ class Return(Base):
 
     id = Column(Integer, Sequence("returns_seq"), primary_key=True)
     reference = Column(Text, unique=True, nullable=False)
-    
+
     order_id = Column(
         Integer,
         ForeignKey("orders.id", onupdate="cascade", ondelete="cascade"),
         primary_key=True
     )
-    order = relationship("Order", back_populates="returns", 
+    order = relationship("Order", back_populates="returns",
                          cascade="save-update")
 
 class Product(Base):

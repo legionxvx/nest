@@ -15,7 +15,7 @@ class FastSpring(Session):
         super().__init__(**kwargs)
 
         self.hooks = hooks
-        self.auth = (environ.get("FS_AUTH_USER", b""), 
+        self.auth = (environ.get("FS_AUTH_USER", b""),
                     environ.get("FS_AUTH_PASS", b""))
 
         if close:
@@ -30,7 +30,7 @@ class FastSpring(Session):
 
     def get_products(self, products):
         """Get information for one or more prodcuts
-        
+
         Arguments:
             products {list} -- Product ID's
         """
@@ -52,7 +52,7 @@ class FastSpring(Session):
             return []
 
         yield data.get("orders", [])
-        
+
         while data.get("nextPage"):
             page = data.get("nextPage")
             res = self.get("orders", params={**kwargs, "page":page})
@@ -67,16 +67,16 @@ class FastSpring(Session):
                              f"{error}")
                 yield []
             yield data.get("orders")
-    
+
     def get_parents(self, with_bundles=False):
         """Get information about "parent" products and their children
-        
+
         Keyword Arguments:
-            with_bundles {bool} -- Control whether bundles are 
+            with_bundles {bool} -- Control whether bundles are
                                    whitelisted (default: {False})
-        
+
         Returns:
-            [dict] -- A dict with parent id as key and a list of 
+            [dict] -- A dict with parent id as key and a list of
                       children as value
         """
         products = []

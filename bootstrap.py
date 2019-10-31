@@ -11,11 +11,11 @@ from .sessions import FastSpring
 
 def products(include_path=False):
     """Get product information from the products dir
-    
+
     Keyword Arguments:
-        include_path {bool} -- Also include the path for each product 
+        include_path {bool} -- Also include the path for each product
                                definition (default: {False})
-    
+
     Returns:
         [dict] -- A dict with the layout {name: {info}}
     """
@@ -38,14 +38,14 @@ def products(include_path=False):
 
 def fs_update_yaml_definitions():
     """Update yaml defines per the current state of FastSpring"""
-    
+
     logger.info("Updating YAML definitions per FastSpring.")
 
     parent_info = FastSpring(close=True).get_parents()
     for _, info in products(include_path=True).items():
         for alias in info.get("aliases", []):
             if alias in parent_info:
-                #check the new set of definitions 
+                #check the new set of definitions
                 #against the old set of definitions
                 _new = set(parent_info[alias])
                 _old = set(info.get("aliases", []))
@@ -94,7 +94,7 @@ def bootstrap():
         logger.debug("Skipping because some other instance of bootstrap is "
                      "running.")
         return
-    
+
     #first past the post gets to create the engine
     from .engine import TheEngine
 
@@ -106,7 +106,7 @@ def bootstrap():
                         filter_by(name=name).first()
             if not(product):
                 bl = ["legacy_aliases"]
-                
+
                 try:
                     [info.pop(i) for i in bl]
                 except (KeyError):
@@ -119,7 +119,7 @@ def bootstrap():
                 [setattr(product, k, v) for k, v in info.items() if not(k in bl)]
             session.add(product)
     if len(session.dirty) > 0 or len(session.new) > 0:
-        session.commit()    
+        session.commit()
     TheEngine.remove()
     unlock()
     logger.info("Finished bootstrapping process.")

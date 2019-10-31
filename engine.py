@@ -22,7 +22,7 @@ class Engine(object):
         }
 
         self.url = url or URL(**conn_info)
-        
+
         try:
             logger.info(f"Creating engine with metadata {Base.metadata}")
             self.engine = create_engine(self.url, echo=echo, poolclass=NullPool)
@@ -35,7 +35,7 @@ class Engine(object):
 
     def new_session(self):
         """Checkout a new session from the registry
-        
+
         Returns:
             [sqlalchemy.orm.session.Session] -- A newly checked out
                                                 session
