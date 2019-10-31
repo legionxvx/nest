@@ -25,7 +25,7 @@ class Engine(object):
         
         try:
             logger.info(f"Creating engine with metadata {Base.metadata}")
-            self.engine = create_engine(self.url, echo=echo)
+            self.engine = create_engine(self.url, echo=echo, poolclass=NullPool)
             Base.metadata.create_all(self.engine)
         except (SQLAlchemyError) as error:
             logger.critical(f"Cannot create engine: {error}")
