@@ -67,34 +67,9 @@ def fs_update_yaml_definitions():
     new_defs = products()
     return new_defs
 
-def lock():
-    file = "/tmp/bootstrap.lock"
-    if not(exists(file)):
-        with open(file, "w") as file:
-            file.write("")
-        logger.debug("Locking bootstrap process.")
-        return True
-    return False
-
-def unlock():
-    file = "/tmp/bootstrap.lock"
-    if exists(file):
-        remove(file)
-        logger.debug("Unlocking bootstrap process.")
-
-def blueprint_safe():
-    file = "/tmp/bootstrap.lock"
-    if exists(file):
-        return False
-    else:
-        return True
-
 def bootstrap():
+    
     logger.info("Bootstrapping engine and products")
-    if not(lock()):
-        logger.debug("Skipping because some other instance of bootstrap is "
-                     "running.")
-        return
 
     #first past the post gets to create the engine
     from .engine import TheEngine
@@ -122,5 +97,4 @@ def bootstrap():
     if len(session.dirty) > 0 or len(session.new) > 0:
         session.commit()
     TheEngine.remove()
-    unlock()
     logger.info("Finished bootstrapping process.")
