@@ -64,7 +64,8 @@ def fs_update_yaml_definitions():
                 with open(path, "w") as f:
                     info.pop("path")
                     dump(info, f)
-    return products
+    new_defs = products()
+    return new_defs
 
 def lock():
     file = "/tmp/bootstrap.lock"
