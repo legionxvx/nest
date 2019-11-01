@@ -1,12 +1,13 @@
 aliases:
+- xt-plugin-essentials-lv2-store
 - xt-plugin-essentials-offer
 - xt-plugin-essentials
+current: true
+legacy_aliases:
+- Plugin Essentials License
 name: Plugin Essentials
+part: essentials
 price: 29
 set: XT
 signer: helium
 token: E
-part: essentials
-legacy_aliases:
-  - Plugin Essentials License
-current: true

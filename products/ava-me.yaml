@@ -1,11 +1,11 @@
 aliases:
 - ava-me-offer
-- ava-me-itb
+- ava-me-offer-2
 - ava-me
+current: true
 name: AVA - Mastering EQ
+part: ava_me
 price: 89
 set: AVA
 signer: neon
 token: AVA-ME
-part: ava_me
-current: true

@@ -1,13 +1,13 @@
 aliases:
+- xt-sc-lv2-store
 - xt-sc-offer
-- xt-sc-special
 - xt-sc
-name: XT-SC
+current: true
+legacy_aliases:
+- plugin_xt_sc
+name: XT-SC Spectral Compressor
+part: xt_sc
 price: 29
 set: XT
 signer: helium
 token: sc
-part: xt_sc
-legacy_aliases:
-  - plugin_xt_sc
-current: true

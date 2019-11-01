@@ -1,12 +1,13 @@
 aliases:
+- xt-eg-lv2-store
 - xt-eg-offer
 - xt-eg
-name: XT-EG
+current: true
+legacy_aliases:
+- plugin_xt_eg
+name: XT-EG Expander Gate
+part: xt_eg
 price: 29
 set: XT
 signer: helium
 token: G
-part: xt_eg
-legacy_aliases:
-  - plugin_xt_eg
-current: true

@@ -1,12 +1,13 @@
 aliases:
+- xt-lc-lv2-store
 - xt-lc-offer
 - xt-lc
-name: XT-LC
+current: true
+legacy_aliases:
+- plugin_xt_lc
+name: XT-LC Lookahead Compressor
+part: xt_lc
 price: 29
 set: XT
 signer: helium
 token: LC
-part: xt_lc
-legacy_aliases:
-  - plugin_xt_lc
-current: true

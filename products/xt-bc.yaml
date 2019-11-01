@@ -1,10 +1,9 @@
-name: XT-BC
-aliases: [plugin_xt_bc, xt-bc, xt-bc]
+aliases:
+  - xt-bc 
+name: XT-BC Bass Character
 price: 29
 set: XT
 signer: helium
-token: B
+token: XTBC
 part: xt_bc
-legacy_aliases:
-  - plugin_xt_bc
 current: true

@@ -1,12 +1,13 @@
 aliases:
+- xt-mc-lv2-store
 - xt-mc-offer
 - xt-mc
-name: XT-MC
+current: true
+legacy_aliases:
+- plugin_xt_mc
+name: XT-MC Multiband Compressor
+part: xt_mc
 price: 29
 set: XT
 signer: helium
 token: C
-part: xt_mc
-legacy_aliases:
-  - plugin_xt_mc
-current: true

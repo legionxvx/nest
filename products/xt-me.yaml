@@ -1,13 +1,13 @@
 aliases:
+- xt-me-lv2-store
+- xt-me-offer
+- xt-me
+current: true
+legacy_aliases:
 - plugin_xt_me
-- xt-me 
-- xt-me-offer"
-name: XT-ME
+name: XT-ME Mastering Equalizer
+part: xt_me
 price: 29
 set: XT
 signer: helium
 token: M
-part: xt_me
-legacy_aliases:
-  - plugin_xt_me
-current: true

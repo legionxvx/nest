@@ -1,12 +1,13 @@
 aliases:
 - xt-tg-offer
+- xt-tg-lv2-store
 - xt-tg
-name: XT-TG
+current: true
+legacy_aliases:
+- plugin_xt_tg
+name: XT-TG Tom Gate
+part: xt_tg
 price: 29
 set: XT
 signer: helium
 token: t
-part: xt_tg
-legacy_aliases:
-  - plugin_xt_tg
-current: true

@@ -1,0 +1,10 @@
+name: XT-BC Character Bundle (Old)
+aliases: [plugin_xt_bc]
+price: 29
+set: XT
+signer: helium
+token: B
+part: xt_bc
+legacy_aliases:
+  - plugin_xt_bc
+current: true
