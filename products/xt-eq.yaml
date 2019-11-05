@@ -9,4 +9,5 @@ token: Q
 part: xt_eq
 legacy_aliases:
   - plugin_graphic10
+  - plugin_xt_eq
 current: true
