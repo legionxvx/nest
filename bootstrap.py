@@ -9,13 +9,15 @@ from . import logger
 from .models import Product
 from .sessions import FastSpring
 
-def products(include_path=False):
+def products(include_path=False, include_legacy_aliases=False):
     """Get product information from the products dir
 
     Keyword Arguments:
         include_path {bool} -- Also include the path for each product
                                definition (default: {False})
-
+        include_legacy_aliases {bool} -- Merge legacy aliases as part
+                                         of the alias definitions
+                                         (default: {False})
     Returns:
         [dict] -- A dict with the layout {name: {info}}
     """
@@ -30,7 +32,19 @@ def products(include_path=False):
                 if name is not None:
                     if include_path:
                         info["path"] = info.get("path", file.resolve())
+                    
+                    if include_legacy_aliases:
+                        aliases = info.get("aliases", [])
+                        legacy = info.get("legacy_aliases", [])
+                        
+                        if len(legacy) > 0:
+                            logger.info(f"Adding legacy aliases: {legacy}")
+                            aliases.extend(legacy)
+
+                        info["aliases"] = aliases
+                    
                     products[name] = info
+
             except (YAMLError, AttributeError) as error:
                 logger.error(f"Could not load {file.resolve()}: {error}. "
                              "Is it malformed?")
