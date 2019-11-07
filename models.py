@@ -149,3 +149,6 @@ class Product(Base):
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")
+
+    def __repr__(self):
+        return f"<Product name='{self.name}'>"
