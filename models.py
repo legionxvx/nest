@@ -125,6 +125,9 @@ class Order(Base):
     returns = relationship("Return", back_populates="order",
                            cascade="save-update")
 
+    def __repr__(self):
+        return f"<Order reference='{self.reference}'>"
+
 class Return(Base):
     __tablename__ = "returns"
 
@@ -138,6 +141,9 @@ class Return(Base):
     )
     order = relationship("Order", back_populates="returns",
                          cascade="save-update")
+
+    def __repr__(self):
+        return f"<Return for='{self.reference}'>"
 
 class Product(Base):
     __tablename__ = "products"
