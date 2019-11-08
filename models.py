@@ -10,7 +10,8 @@ from sqlalchemy import (
     ForeignKey,
     select,
     distinct,
-    func
+    func,
+    not_
 )
 
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -53,6 +54,9 @@ class User(Base):
     def products(self):
         products = []
         for order in self.orders:
+            if len(order.returns) != 0:
+                continue
+
             for product in order.products:
                 if not(product in products):
                     products.append(product)
@@ -63,6 +67,7 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
+                        where(not_(Order.id.in_(select([Return.order_id])))).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
