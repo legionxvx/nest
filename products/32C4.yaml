@@ -6,3 +6,4 @@ signer: helium
 token: 32c4
 part: mixbus32c-4
 current: false
+version: 4

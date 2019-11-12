@@ -13,3 +13,4 @@ signer: neon
 token: 5
 part: mixbus5
 current: true
+version: 5

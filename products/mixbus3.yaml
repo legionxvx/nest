@@ -6,3 +6,4 @@ signer: helium
 token: 3
 part: mixbus3
 current: false
+version: 3

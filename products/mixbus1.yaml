@@ -17,3 +17,4 @@ signer: argon
 token: 1
 part: mixbus1
 current: false
+version: 1
