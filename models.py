@@ -212,6 +212,7 @@ class Product(Base):
     aliases = Column(ARRAY(Text, dimensions=1), nullable=False)
     price   = Column(Float, nullable=False)
     set     = Column(Text, nullable=False)
+    version = Column(Integer)
     signer  = Column(Text)
     token   = Column(Text)
     part    = Column(Text)
