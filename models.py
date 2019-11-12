@@ -11,7 +11,8 @@ from sqlalchemy import (
     select,
     distinct,
     func,
-    not_
+    not_,
+    and_
 )
 
 from sqlalchemy.dialects.postgresql.array import ARRAY
@@ -99,6 +100,64 @@ class User(Base):
                         where(Product.id == OrderProductAssociation.product_id).\
                             where(Product.price > 0)
         return statement.label("any-paid")
+
+    @hybrid_property
+    def owns_any_mixbus(self):
+        return any([product.set == "Mixbus" for product in self.products])
+
+    @owns_any_mixbus.expression
+    def owns_any_mixbus(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.set == "Mixbus")
+        return statement.label("any-mixbus")
+
+    @hybrid_property
+    def owns_current_mixbus(self):
+        for product in self.products:
+            if product.set == "Mixbus" and product.current:
+                return True
+        return False
+
+    @owns_current_mixbus.expression
+    def owns_current_mixbus(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(and_(Product.set == "Mixbus", Product.current))
+        return statement.label("any-current-mixbus")
+
+    @hybrid_property
+    def owns_any_32c(self):
+        return any([product.set == "32C" for product in self.products])
+
+    @owns_any_32c.expression
+    def owns_any_32c(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.set == "32C")
+        return statement.label("any-32c")
+
+    @hybrid_property
+    def owns_current_32c(self):
+        for product in self.products:
+            if product.set == "Mixbus" and product.current:
+                return True
+        return False
+
+    @owns_current_32c.expression
+    def owns_current_32c(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(and_(Product.set == "32C", Product.current))
+        return statement.label("any-current-32c")
 
 class Order(Base):
     __tablename__ = "orders"
