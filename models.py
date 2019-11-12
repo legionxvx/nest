@@ -102,6 +102,19 @@ class User(Base):
         return statement.label("any-paid")
 
     @hybrid_property
+    def owns_any_ava(self):
+        return any([product.set == "AVA" for product in self.products])
+
+    @owns_any_ava.expression
+    def owns_any_ava(cls):
+        statement = select([True]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.set == "AVA")
+        return statement.label("any-ava")
+
+    @hybrid_property
     def owns_any_mixbus(self):
         return any([product.set == "Mixbus" for product in self.products])
 
@@ -158,6 +171,40 @@ class User(Base):
                         where(Product.id == OrderProductAssociation.product_id).\
                             where(and_(Product.set == "32C", Product.current))
         return statement.label("any-current-32c")
+
+    @hybrid_property
+    def highest_version_of_mixbus(self):
+        m_versions = [0]
+        for product in self.products:
+            if product.set == "Mixbus":
+                m_versions.append(product.version)
+        return max(m_versions)
+
+    @highest_version_of_mixbus.expression
+    def highest_verison_of_mixbus(cls):
+        statement = select([func.max(Product.version)]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.set == "Mixbus")
+        return statement.label("highest-mixbus-version")
+
+    @hybrid_property
+    def highest_version_of_32c(self):
+        c_versions = [0]
+        for product in self.products:
+            if product.set == "32C":
+                c_versions.append(product.version)
+        return max(c_versions)
+
+    @highest_version_of_32c.expression
+    def highest_verison_of_32c(cls):
+        statement = select([func.max(Product.version)]).\
+                        where(Order.user_id == cls.id).\
+                        where(Order.id == OrderProductAssociation.order_id).\
+                        where(Product.id == OrderProductAssociation.product_id).\
+                            where(Product.set == "32C")
+        return statement.label("highest-32c-version")
 
 class Order(Base):
     __tablename__ = "orders"
