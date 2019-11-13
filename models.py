@@ -159,7 +159,7 @@ class User(Base):
     @hybrid_property
     def owns_current_32c(self):
         for product in self.products:
-            if product.set == "Mixbus" and product.current:
+            if product.set == "32C" and product.current:
                 return True
         return False
 
