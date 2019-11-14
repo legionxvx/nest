@@ -38,6 +38,39 @@ class FastSpring(Session):
         url = urljoin("products/", joined_ids)
         return self.get(url)
 
+    def get_events(self, _type, **kwargs):
+        url = urljoin("events/", _type)
+        res = self.get(url, params=kwargs)
+
+        try:
+            res.raise_for_status()
+            data = res.json()
+        except (HTTPError) as error:
+            logger.error(f"Could not get orders: {error}")
+            return []
+        except (JSONDecodeError) as error:
+            logger.error(f"Could not decode response JSON: {error}")
+            return []
+
+        yield data.get("events", [])
+
+        while data.get("nextPage"):
+            page = data.get("nextPage")
+            url = urljoin("events/", _type)
+            res = self.get(url, params={**kwargs, "page":page})
+            try:
+                res.raise_for_status()
+                data = res.json()
+            except (HTTPError) as error:
+                logger.error(f"Could not get orders on page {page}: {error}")
+                yield []
+            except (JSONDecodeError) as error:
+                logger.error(f"Could not decode response JSON on page {page}: "
+                             f"{error}")
+                yield []
+            yield data.get("events")
+
+
     def get_orders(self, **kwargs):
         res = self.get("orders", params=kwargs)
 
