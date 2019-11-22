@@ -1,0 +1,11 @@
+aliases:
+- mixbus-v5-demo
+- mb5-demo
+- mixbus-update
+- mixbus-v5-installer
+- mixbus-v5-demo-special
+name: Mixbus v5 Demo
+price: 0
+set: Mixbus
+current: true
+version: 5
