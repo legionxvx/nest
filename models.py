@@ -98,12 +98,15 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.price > 0)
+                        where(Product.price > 0)
         return statement.label("any-paid")
 
     @hybrid_property
     def owns_any_ava(self):
-        return any([product.set == "AVA" for product in self.products])
+        for product in self.products:
+            if product.set == "AVA" and not(product.demo):
+                return True
+        return False
 
     @owns_any_ava.expression
     def owns_any_ava(cls):
@@ -111,12 +114,15 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.set == "AVA")
+                        where(and_(Product.set == "AVA", not_(Product.demo)))
         return statement.label("any-ava")
 
     @hybrid_property
     def owns_any_mixbus(self):
-        return any([product.set == "Mixbus" for product in self.products])
+        for product in self.products:
+            if product.set == "Mixbus" and not(product.demo):
+                return True
+        return False
 
     @owns_any_mixbus.expression
     def owns_any_mixbus(cls):
@@ -124,13 +130,13 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.set == "Mixbus")
+                        where(and_(Product.set == "Mixbus", not_(Product.demo)))
         return statement.label("any-mixbus")
 
     @hybrid_property
     def owns_current_mixbus(self):
         for product in self.products:
-            if product.set == "Mixbus" and product.current:
+            if product.set == "Mixbus" and product.current and not(product.demo):
                 return True
         return False
 
@@ -140,12 +146,15 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(and_(Product.set == "Mixbus", Product.current))
+                        where(and_(Product.set == "Mixbus", Product.current, not_(Product.demo)))
         return statement.label("any-current-mixbus")
 
     @hybrid_property
     def owns_any_32c(self):
-        return any([product.set == "32C" for product in self.products])
+        for product in self.products:
+            if product.set == "32C" and not(product.demo):
+                return True
+        return False
 
     @owns_any_32c.expression
     def owns_any_32c(cls):
@@ -153,13 +162,13 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.set == "32C")
+                        where(and_(Product.set == "32C", not(Product.demo)))
         return statement.label("any-32c")
 
     @hybrid_property
     def owns_current_32c(self):
         for product in self.products:
-            if product.set == "32C" and product.current:
+            if product.set == "32C" and product.current and not(product.demo):
                 return True
         return False
 
@@ -169,14 +178,14 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(and_(Product.set == "32C", Product.current))
+                        where(and_(Product.set == "32C", Product.current, not(Product.demo)))
         return statement.label("any-current-32c")
 
     @hybrid_property
     def highest_version_of_mixbus(self):
         m_versions = [0]
         for product in self.products:
-            if product.set == "Mixbus":
+            if product.set == "Mixbus" and not(product.demo):
                 m_versions.append(product.version)
         return max(m_versions)
 
@@ -186,14 +195,14 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.set == "Mixbus")
+                        where(and_(Product.set == "Mixbus", not(Product.demo)))
         return statement.label("highest-mixbus-version")
 
     @hybrid_property
     def highest_version_of_32c(self):
         c_versions = [0]
         for product in self.products:
-            if product.set == "32C":
+            if product.set == "32C" and not(product.demo):
                 c_versions.append(product.version)
         return max(c_versions)
 
@@ -203,7 +212,7 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                            where(Product.set == "32C")
+                        where(and_(Product.set == "32C", not(Product.demo)))
         return statement.label("highest-32c-version")
 
 class Order(Base):
@@ -264,6 +273,7 @@ class Product(Base):
     token   = Column(Text)
     part    = Column(Text)
     current = Column(Boolean)
+    demo    = Column(Boolean, default=False)
 
     orders = relationship("Order", secondary="order_product_associations",
                           back_populates="products", cascade="save-update")

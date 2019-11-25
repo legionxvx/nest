@@ -4,3 +4,4 @@ name: AVA - Plugin Installer Demo
 price: 0
 set: AVA
 current: true
+demo: true
