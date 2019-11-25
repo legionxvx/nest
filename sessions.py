@@ -167,3 +167,13 @@ class FastSpring(Session):
                 parent_information[parent].append(child)
 
         return parent_information
+
+    def mark_event_processed(self, _id=""):
+        url = urljoin("events/", _id)
+        payload = {"processed":True}
+        res = self.post(url, params=payload)
+        try:
+            res.raise_for_status()
+        except (HTTPError) as error:
+            logger.error(f"Could not mark event processed: {error}")
+        return res
