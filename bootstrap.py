@@ -88,6 +88,10 @@ def bootstrap():
     #first past the post gets to create the engine
     from .engine import TheEngine
 
+    if not(TheEngine.connected):
+        logger.critical("Skipping: The engine is not connected.")
+        return False
+
     fs_update_yaml_definitions()
 
     session = TheEngine.new_session()
@@ -112,3 +116,5 @@ def bootstrap():
         session.commit()
     TheEngine.remove()
     logger.info("Finished bootstrapping process.")
+
+    return True

@@ -6,6 +6,8 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine, event
 
+from psycopg2 import OperationalError
+
 from . import logger
 from nest.models import Base
 
@@ -22,12 +24,13 @@ class Engine(object):
         }
 
         self.url = url or URL(**conn_info)
+        self.connected = False
 
         try:
-            logger.info(f"Creating engine with metadata {Base.metadata}")
             self.engine = create_engine(self.url, echo=echo, poolclass=NullPool)
             Base.metadata.create_all(self.engine)
-        except (SQLAlchemyError) as error:
+            self.connected = True
+        except (SQLAlchemyError, OperationalError) as error:
             logger.critical(f"Cannot create engine: {error}")
 
         self.session_factory  = sessionmaker(bind=self.engine)
