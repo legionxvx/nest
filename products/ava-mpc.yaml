@@ -1,8 +1,7 @@
-name: AVA - MPC Channelstrip
-aliases: [ava-mpc, mpc-channelstrip]
-price: 1
+aliases:
+    - mpc-channel-installer
+name: MPC Channel Installer 
+price: 0
 set: AVA
-signer: neon
-token: MPC
-part: mpc
 current: true
+demo: true
