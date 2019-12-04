@@ -2,6 +2,7 @@ name: AVA - MPC Channelstrip
 aliases: [ava-mpc, mpc-channelstrip, mpc-channel-license]
 price: 1
 set: AVA
-signer: neontoken: MPC
+signer: neon
+token: MPC
 part: mpc
 current: true
