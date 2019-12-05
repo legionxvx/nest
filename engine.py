@@ -22,7 +22,9 @@ class Engine(object):
             "password": environ.get("PG_PASS"),
             "database": environ.get("PG_DATABASE")
         }
-
+        
+        logger.debug(f"Connection with info: {conn_info}")
+        
         self.url = url or URL(**conn_info)
         self.connected = False
 
