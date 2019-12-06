@@ -1,3 +1,4 @@
+from hashlib import md5
 from datetime import datetime, timedelta
 
 from sqlalchemy import (
@@ -50,6 +51,10 @@ class User(Base):
     last_token_request = Column(DateTime)
 
     orders   = relationship("Order", backref="user", cascade="save-update")
+
+    def __repr__(self):
+        _hash = md5(self.email.encode()).hexdigest() 
+        return f"<User hash='{_hash}'>"
 
     @hybrid_property
     def products(self):
@@ -222,12 +227,13 @@ class Order(Base):
     reference = Column(Text, unique=True, nullable=False)
     created   = Column(DateTime, nullable=False)
     date      = Column(DateTime, nullable=False, default=datetime.utcnow())
-    live      = Column(Boolean, nullable=False)
-    total     = Column(Float, default=0.0)
-    discount  = Column(Float, default=0.0)
-    paths     = Column(ARRAY(Text, dimensions=1))
-    coupons   = Column(ARRAY(Text, dimensions=1))
-    name      = Column(Text)
+    live      = Column(Boolean, nullable=False, default=True)
+    gift      = Column(Boolean, nullable=False, default=False)
+    total     = Column(Float, nullable=False, default=0.0)
+    discount  = Column(Float, nullable=False, default=0.0)
+    paths     = Column(ARRAY(Text, dimensions=1), default=[])
+    coupons   = Column(ARRAY(Text, dimensions=1), default=[])
+    name      = Column(Text, nullable=False, default="John Doe")
 
     user_id = Column(
         Integer,
