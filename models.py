@@ -221,12 +221,12 @@ class Order(Base):
     id        = Column(Integer, primary_key=True)
     reference = Column(Text, unique=True, nullable=False)
     created   = Column(DateTime, nullable=False)
-    date      = Column(DateTime, nullable=False)
+    date      = Column(DateTime, nullable=False, default=datetime.utcnow())
     live      = Column(Boolean, nullable=False)
     total     = Column(Float, default=0.0)
     discount  = Column(Float, default=0.0)
-    path      = Column(Text)
-    coupon    = Column(Text)
+    paths     = Column(ARRAY(Text, dimensions=1))
+    coupons   = Column(ARRAY(Text, dimensions=1))
     name      = Column(Text)
 
     user_id = Column(
