@@ -49,6 +49,7 @@ class User(Base):
     language_code      = Column(Text, default="en")
     created            = Column(DateTime, default=datetime.utcnow())
     last_token_request = Column(DateTime)
+    subscribed         = Column(Boolean)
 
     orders   = relationship("Order", backref="user", cascade="save-update")
 
