@@ -3,13 +3,9 @@ from abc import abstractproperty
 from datetime import datetime
 from json import load
 
-from ..models import (
-    User, 
-    Product, 
-    Order
-)
+from .. import logger
+from ..models import Order, Product, User
 
-from . import logger
 
 class EventParser(object):
     

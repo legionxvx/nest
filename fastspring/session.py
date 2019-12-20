@@ -5,18 +5,21 @@ from urllib.parse import urljoin
 
 from requests import HTTPError, Session
 
-from . import logger
+from .. import logger
+
 
 class FastSpring(Session):
     """Custom session with FastSpring's API prefixed"""
-    def __init__(self, prefix=None, close=False, hooks={}, **kwargs):
+    def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
         self.prefix = prefix or "https://api.fastspring.com"
 
         super().__init__(**kwargs)
 
         self.hooks = hooks
-        self.auth = (environ.get("FS_AUTH_USER", b""),
-                    environ.get("FS_AUTH_PASS", b""))
+        self.auth = auth or (
+                        environ.get("FS_AUTH_USER", b""),
+                        environ.get("FS_AUTH_PASS", b"")
+                    )
 
         if close:
             self.headers.update({'Connection':'close'})

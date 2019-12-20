@@ -1,37 +1,38 @@
-from hashlib import md5
 from datetime import datetime, timedelta
+from hashlib import md5
 
 from sqlalchemy import (
-    Column,
+    Boolean, 
+    Column, 
+    DateTime, 
+    Float, 
+    ForeignKey, 
     Integer,
-    Boolean,
-    Text,
-    DateTime,
-    Float,
-    ForeignKey,
-    select,
-    distinct,
-    func,
-    not_,
-    and_
+    Text, 
+    and_, 
+    distinct, 
+    func, 
+    not_, 
+    select
 )
-
-from sqlalchemy.dialects.postgresql.array import ARRAY
 from sqlalchemy.dialects.postgresql import array_agg
+from sqlalchemy.dialects.postgresql.array import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.schema import Sequence
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Sequence
 
 Base = declarative_base()
 
 class OrderProductAssociation(Base):
     __tablename__ = "order_product_associations"
+    
     order_id = Column(
         Integer,
         ForeignKey("orders.id", onupdate="cascade", ondelete="cascade"),
         primary_key=True
     )
+
     product_id = Column(
         Integer,
         ForeignKey("products.id", onupdate="cascade", ondelete="cascade"),
@@ -241,11 +242,19 @@ class Order(Base):
         ForeignKey("users.id", onupdate="cascade", ondelete="cascade"),
         index=True
     )
-    products = relationship("Product", secondary="order_product_associations",
-                            back_populates="orders", cascade="save-update")
 
-    returns = relationship("Return", back_populates="order",
-                           cascade="save-update")
+    products = relationship(
+        "Product", 
+        secondary="order_product_associations",
+        back_populates="orders", 
+        cascade="save-update"
+    )
+
+    returns = relationship(
+        "Return", 
+        back_populates="order",
+        cascade="save-update"
+    )
 
     def __repr__(self):
         return f"<Order reference='{self.reference}'>"
@@ -282,8 +291,12 @@ class Product(Base):
     current = Column(Boolean)
     demo    = Column(Boolean, default=False)
 
-    orders = relationship("Order", secondary="order_product_associations",
-                          back_populates="products", cascade="save-update")
+    orders = relationship(
+        "Order", 
+        secondary="order_product_associations",
+        back_populates="products", 
+        cascade="save-update"
+    )
 
     def __repr__(self):
         return f"<Product name='{self.name}'>"

@@ -10,27 +10,30 @@ from requests import HTTPError, Session
 from ..fastspring.events import Order
 from ..fastspring.utils import get_products
 from ..models import User
-from . import logger
+from .. import logger
 
 
 class Mailchimp(Session):
     """Bootstrapped connection to Mailchimp's API using our
     credentials"""
-    def __init__(self, prefix=None, close=False, hooks={}, **kwargs):
+    def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
         self.prefix = prefix or "https://us14.api.mailchimp.com/3.0/"
         self.lists = {}
 
         super().__init__(**kwargs)
 
-        self.auth    = (environ.get("MAILCHIMP_AUTH_USER"),
-                        environ.get("MAILCHIMP_AUTH_TOKEN"))
-        self.hooks   = hooks
+        self.auth = auth or (
+                        environ.get("MAILCHIMP_AUTH_USER", "foo"),
+                        environ.get("MAILCHIMP_AUTH_TOKEN", "bar")
+                    )
+        self.hooks = hooks
 
         if close:
             self.headers.update({'Connection':'close'})
 
         self.get_lists()
         self.default_list = self.lists.get(environ.get("MAILCHIMP_LIST"))
+        self.connected = self.get("/").ok
 
     @classmethod
     def hash_email(cls, email=""):

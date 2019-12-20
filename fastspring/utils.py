@@ -6,11 +6,11 @@ from pathlib import Path
 
 from yaml import YAMLError, dump, safe_load
 
+from .. import logger
 from ..engine import TheEngine
 from ..models import Product
 from .session import FastSpring
 
-from . import logger
 
 def get_products(include_path=False, include_legacy_aliases=False):
     path = Path(__file__).parent / "products"
@@ -74,9 +74,9 @@ def update_definitions():
             #against the old set of definitions
             children = parents[alias]
             
-            _new = set(children)
-            _old = set(aliases)
-            if _new.issubset(_old):
+            new = set(children)
+            old = set(aliases)
+            if new.issubset(old):
                 logger.debug(f"Skipping {name}")
                 continue
 
@@ -99,7 +99,7 @@ def bootstrap():
         logger.critical("Skipping Bootstrap: The engine is not connected.")
         return False
     
-    session = TheEngine.new_session()
+    session = TheEngine()
     products = update_definitions()
     
     for name, info in products.items():
@@ -118,5 +118,4 @@ def bootstrap():
 
     if len(session.dirty) > 0 or len(session.new) > 0:
         session.commit()
-    TheEngine.remove()
     return True
