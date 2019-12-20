@@ -196,7 +196,7 @@ class User(Base):
         return max(m_versions)
 
     @highest_version_of_mixbus.expression
-    def highest_verison_of_mixbus(cls):
+    def highest_version_of_mixbus(cls):
         statement = select([func.max(Product.version)]).\
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
@@ -213,7 +213,7 @@ class User(Base):
         return max(c_versions)
 
     @highest_version_of_32c.expression
-    def highest_verison_of_32c(cls):
+    def highest_version_of_32c(cls):
         statement = select([func.max(Product.version)]).\
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\

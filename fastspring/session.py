@@ -1,9 +1,9 @@
-from os import environ
-from urllib.parse import urljoin
 from collections import defaultdict
 from json import JSONDecodeError
+from os import environ
+from urllib.parse import urljoin
 
-from requests import Session, HTTPError
+from requests import HTTPError, Session
 
 from . import logger
 
@@ -20,6 +20,8 @@ class FastSpring(Session):
 
         if close:
             self.headers.update({'Connection':'close'})
+
+        self.connected = self.get("orders").ok
 
     def request(self, method, url, *args, **kwargs):
         _url = urljoin(self.prefix, url)
