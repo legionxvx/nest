@@ -4,7 +4,7 @@ from datetime import datetime
 from json import load
 
 from .. import logger
-from ..models import Order, Product, User
+from .. import models
 
 
 class EventParser(object):
@@ -108,7 +108,7 @@ class Order(Event):
             "paths": paths,
             "coupons": self.get("coupons", []),
         }
-        return Order(**kwargs)
+        return models.Order(**kwargs)
 
     @property
     def recipient(self):
@@ -127,8 +127,7 @@ class Order(Event):
             "country_code": address.get("country", "US"),
         }
 
-        model = User(**kwargs)
-        return model
+        return models.User(**kwargs)
 
     def update_existing_order(self, order):
         order.reference = self.model.reference
@@ -167,7 +166,7 @@ class Return(Event):
         kwargs = {
             "reference": original.get("reference")
         }
-        return Return(**kwargs)
+        return models.Return(**kwargs)
 
     @property
     def order(self):
@@ -187,7 +186,7 @@ class Return(Event):
             "paths": [],
             "coupons": [],
         }
-        return Order(**kwargs)
+        return models.Order(**kwargs)
 
     def update_existing_order(self, order):
         order.reference = self.order.reference
@@ -211,7 +210,7 @@ class SubscriptionActivated(Event):
             "language_code": account.get("language", "en"),
             "country_code": account.get("country", "US"),
         }
-        return User(**kwargs)
+        return models.User(**kwargs)
 
     def __repr__(self):
         return f"<SubscriptionActivated id='{self.id}' user='{self.model}'>"
@@ -233,7 +232,7 @@ class SubscriptionDeactivated(Event):
             "language_code": account.get("language", "en"),
             "country_code": account.get("country", "US"),
         }
-        return User(**kwargs)
+        return models.User(**kwargs)
 
     def __repr__(self):
         return f"<SubscriptionDeactivated id='{self.id}' user='{self.model}'>"
