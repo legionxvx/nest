@@ -1,3 +1,2 @@
-# Nest
-Nest is a python module providing common interfaces for API events, database 
-models and custom API sessions.
+This is something I wrote for Harrison Consoles. It is mirrored here in hopes 
+that it may be useful to someone else.
