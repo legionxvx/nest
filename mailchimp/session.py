@@ -10,7 +10,7 @@ from requests import HTTPError, Session
 from ..fastspring.events import Order
 from ..fastspring.utils import get_products
 from ..models import User
-from .. import logger
+from .. import logger, config
 
 
 class Mailchimp(Session):
@@ -22,10 +22,11 @@ class Mailchimp(Session):
 
         super().__init__(**kwargs)
 
-        self.auth = auth or (
+        self.auth = auth or config.get("FS_AUTH") or (
                         environ.get("MAILCHIMP_AUTH_USER", "foo"),
                         environ.get("MAILCHIMP_AUTH_TOKEN", "bar")
                     )
+        self.auth = (self.auth[0], self.auth[1])
         self.hooks = hooks
 
         if close:

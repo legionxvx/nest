@@ -1,0 +1,3 @@
+DB_AUTH: [foo, bar]
+FS_AUTH: [foo, bar]
+Mc_AUTH: [foo, bar]

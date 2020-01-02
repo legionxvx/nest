@@ -9,17 +9,28 @@ from sqlalchemy.pool import NullPool
 
 from nest.models import Base
 
-from . import logger
+from . import logger, config
 
 
 HOST = environ.get("PG_HOST", "localhost")
 PORT = environ.get("PG_PORT", "5432")
 DATABASE = environ.get("PG_DATABASE", "postgres")
 
-class Engine(object):
+class Singleton(type):
+
+    def __init__(cls, name, bases, attrs, **kwargs):
+        super().__init__(name, bases, attrs)
+        cls._instance = None
+
+    def __call__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__call__(*args, **kwargs)
+        return cls._instance
+
+class Engine(metaclass=Singleton):
 
     def __init__(self, url=None, auth=None, echo=False, poolclass=None):
-        auth = auth or (
+        auth = auth or config.get("DB_AUTH") or (
                 environ.get("PG_USER"), 
                 environ.get("PG_PASS")
             )
@@ -46,9 +57,13 @@ class Engine(object):
             Base.metadata.create_all(self.engine)
             self.connected = True
         except (SQLAlchemyError, OperationalError) as error:
-            logger.critical(f"Failed to start engine: {error}")
+            logger.critical(error)
 
         self.session_factory = sessionmaker(bind=self.engine)
+
+        @event.listens_for(self.session_factory, "after_commit")
+        def receive_after_commit(session):
+            logger.debug("Received commit")
 
     def __call__(self, **kwargs):
         session = self.session_factory(**kwargs)
@@ -60,9 +75,3 @@ class Engine(object):
 
     def get_echo(self):
         return self.engine.echo
-
-TheEngine = Engine()
-
-@event.listens_for(TheEngine.session_factory, 'after_commit')
-def receive_after_commit(session):
-    logger.debug("Received commit")

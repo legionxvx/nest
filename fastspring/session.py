@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 from requests import HTTPError, Session
 
-from .. import logger
+from .. import logger, config
 
 
 class FastSpring(Session):
@@ -16,13 +16,14 @@ class FastSpring(Session):
         super().__init__(**kwargs)
 
         self.hooks = hooks
-        self.auth = auth or (
+        self.auth = auth or config.get("FS_AUTH") or (
                         environ.get("FS_AUTH_USER", b""),
                         environ.get("FS_AUTH_PASS", b"")
                     )
+        self.auth = (self.auth[0], self.auth[1])
 
         if close:
-            self.headers.update({'Connection':'close'})
+            self.headers.update({"Connection":"close"})
 
         self.connected = self.get("orders").ok
 

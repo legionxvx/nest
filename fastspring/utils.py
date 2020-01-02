@@ -7,7 +7,7 @@ from pathlib import Path
 from yaml import YAMLError, dump, safe_load
 
 from .. import logger
-from ..engine import TheEngine
+from ..engine import Engine
 from ..models import Product
 from .session import FastSpring
 
@@ -95,11 +95,12 @@ def update_definitions():
     return get_products()
 
 def bootstrap():
-    if not(TheEngine.connected):
+    engine = Engine()
+    if not(engine.connected):
         logger.critical("Skipping Bootstrap: The engine is not connected.")
         return False
     
-    session = TheEngine()
+    session = engine()
     products = update_definitions()
     
     for name, info in products.items():
