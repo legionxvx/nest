@@ -12,9 +12,9 @@ from nest.models import Base
 from . import logger, config
 
 
-HOST = environ.get("PG_HOST", "localhost")
-PORT = environ.get("PG_PORT", "5432")
-DATABASE = environ.get("PG_DATABASE", "postgres")
+HOST = config.get("DB_HOST") or environ.get("DB_HOST", "localhost")
+PORT = config.get("DB_PORT") or environ.get("DB_PORT", "5432")
+DATABASE = config.get("DB_NAME") or environ.get("DB_DATABASE", "postgres")
 
 class Singleton(type):
 
