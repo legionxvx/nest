@@ -7,25 +7,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from nest.models import Base
-
 from . import logger, config
+from .models import Base
+from .types import Singleton
 
 
 HOST = config.get("DB_HOST") or environ.get("DB_HOST", "localhost")
 PORT = config.get("DB_PORT") or environ.get("DB_PORT", "5432")
 DATABASE = config.get("DB_NAME") or environ.get("DB_DATABASE", "postgres")
-
-class Singleton(type):
-
-    def __init__(cls, name, bases, attrs, **kwargs):
-        super().__init__(name, bases, attrs)
-        cls._instance = None
-
-    def __call__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__call__(*args, **kwargs)
-        return cls._instance
 
 class Engine(metaclass=Singleton):
 

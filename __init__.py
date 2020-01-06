@@ -15,3 +15,4 @@ from .fastspring import FastSpring
 from .fastspring.events import Event, EventParser
 from .fastspring.utils import bootstrap, get_products
 from .mailchimp import Mailchimp
+from .redis import LockFactory, RedisInstance, locks, greenlight
