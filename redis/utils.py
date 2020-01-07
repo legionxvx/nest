@@ -35,7 +35,7 @@ def locks(resource=None, max_tries=5, lock_args={}):
                 else:
                     logger.debug("Giving up!")
                 lock.release()
-            except (ConnectionError) as error:
+            except (ConnectionError):
                 logger.critical("Cannot connect to redis!")
         return decorated_function
     return decorator
@@ -48,7 +48,7 @@ def greenlight(f):
             greenlight = redis.get("greenlight")
             if (greenlight == b"1"):
                 return f(*args, **kwargs)
-        except (RedisError) as error:
+        except (RedisError):
             logger.error("Cannot connect to redis. Is the server running?")
             message = "Cannot determine greenlight status."
             return jsonify(message=message), HTTPStatus.INTERNAL_SERVER_ERROR
