@@ -70,6 +70,17 @@ class User(Base):
                     products.append(product)
         return products
 
+    def products_with_refs(self):
+        products = []
+        for order in self.orders:
+            if len(order.returns) != 0:
+                continue
+
+            for product in order.products:
+                if not(product in products):
+                    products.append((product, order.reference))
+        return products
+
     @products.expression
     def products(cls):
         _xpr = array_agg(distinct(Product.name))
