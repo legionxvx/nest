@@ -17,3 +17,4 @@ from .fastspring.utils import bootstrap, get_products
 from .mailchimp import Mailchimp
 from .redis import LockFactory, RedisInstance, locks, greenlight
 from .engine import Engine
+from .models import User, Product, Order
