@@ -58,6 +58,22 @@ class User(Base):
         _hash = md5(self.email.encode()).hexdigest() 
         return f"<User hash='{_hash}'>"
 
+    def highest_possible_version_for_set(self, product):
+        if product.set in ["Mixbus"]:
+            if product.version >= 3 \
+                and product.version == self.highest_version_of_mixbus:
+                return True
+            else:
+                return False
+        if product.set in ["32C"]:
+            if product.version >= 3 \
+                and product.version == self.highest_version_of_32c:
+                return True
+            else:
+                return False
+        return True
+
+
     @hybrid_property
     def products(self):
         products = []
