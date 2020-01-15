@@ -283,6 +283,10 @@ class Order(Base):
         cascade="save-update"
     )
 
+    def products_str(self, seperator=", "):
+        rv = seperator.join([product.name for product in self.products])
+        return rv
+
     def __repr__(self):
         return f"<Order reference='{self.reference}'>"
 
