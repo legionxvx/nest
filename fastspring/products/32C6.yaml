@@ -1,0 +1,10 @@
+aliases:
+- mixbus32c-6
+name: Mixbus32C v6
+price: 1
+set: 32C
+signer: neon
+token: 32c6
+part: mixbus32c-6
+current: true
+version: 6
