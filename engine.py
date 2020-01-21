@@ -64,3 +64,6 @@ class Engine(metaclass=Singleton):
 
     def get_echo(self):
         return self.engine.echo
+
+    def dispose(self):
+        self.engine.dispose()
