@@ -10,6 +10,7 @@ Currently it supports the following features:
 - Redis locking
 - Product definitions
 - PostgreSQL database engine and model
+- Database migration
 
 ### Prerequisites
 
