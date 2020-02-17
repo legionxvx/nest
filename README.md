@@ -38,6 +38,18 @@ $ cd your/git/project/
 $ git submodule add git@git.harrisonconsoles.com:marketing/nest.git
 ```
 
+## Configuration
+
+Nest looks for its configuration and credentials in the following order 
+(first found is used):
+
+1. Arguments passed into constructors at runtime
+2. `config.yaml` or `config.yml` in its root directory
+3. Environment variables with the same variable names as those found in 
+`config.yaml`
+
+Using `config.yaml` is usually most convenient.
+
 ## Running the tests
 
 1. Set up a working development environment per the 
