@@ -17,7 +17,6 @@ PORT = config.get("DB_PORT") or environ.get("DB_PORT", "5432")
 DATABASE = config.get("DB_NAME") or environ.get("DB_DATABASE", "postgres")
 
 class Engine(metaclass=Singleton):
-
     def __init__(self, url=None, auth=None, echo=False, poolclass=None):
         auth = auth or config.get("DB_AUTH") or (
                 environ.get("PG_USER"), 
