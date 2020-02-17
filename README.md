@@ -61,6 +61,33 @@ $ pipenv install --dev
 $ pipenv run pytest tests
 ```
 
+## Database Migration
+
+Migration revisions need to be generated after every major (and most minor) 
+change. This includes the any of the following
+
+- A new model definition
+- Column name/constraint changes
+- New relationships
+
+Migration versioning is handled by Alembic. Alembic is configured to generate 
+automated revisions using.
+```
+$ pipenv run alembic revision --autogenerate -m "Description"
+```
+
+
+- To upgrade your database
+```
+$ pipenv run alembic upgrade head
+or
+$ pipenv run alembic upgrade $REVISION
+```
+- To downgrade your database
+```
+$ pipenv run alembic downgrade $REVISION
+```
+
 ## Versioning
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, 
