@@ -4,7 +4,6 @@ from json import JSONDecodeError, dumps
 from os import environ
 from urllib.parse import urljoin
 
-from flask import current_app
 from requests import HTTPError, Session
 
 from ..fastspring.events import Order

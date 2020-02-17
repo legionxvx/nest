@@ -2,7 +2,6 @@ from functools import wraps
 from http import HTTPStatus
 from time import sleep
 
-from flask import jsonify
 from redis import RedisError
 from redlock import RedLockError
 
@@ -51,8 +50,8 @@ def greenlight(f):
         except (RedisError):
             logger.error("Cannot connect to redis. Is the server running?")
             message = "Cannot determine greenlight status."
-            return jsonify(message=message), HTTPStatus.INTERNAL_SERVER_ERROR
+            return {}, HTTPStatus.INTERNAL_SERVER_ERROR
 
         message = "Endpoint is not accepting connections at this time."
-        return jsonify(message=message), HTTPStatus.FORBIDDEN
+        return {}, HTTPStatus.FORBIDDEN
     return decorated_function
