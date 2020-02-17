@@ -1,8 +1,8 @@
 from os import environ
 from redis import Redis
 
-from .. import config
-from ..types import Singleton
+from ... import config
+from ...meta.types import Singleton
 
 DEFAULT_HOST = config.get("RD_HOST") or environ.get("REDIS_HOST", "localhost")
 

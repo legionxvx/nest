@@ -4,53 +4,46 @@ from datetime import datetime
 from json import load
 
 from .. import logger
-from .. import models
+from ..engines.psql import models
 
 
 class EventParser(object):
-    
     def __init__(self, segment=[], type_hint=None):
         self.segment = segment
         self.type_hint = type_hint
 
     def __iter__(self):
         for data in self.segment:
-            event = Event(data, type_hint=self.type_hint)
+            event = WebhookEvent(data, type_hint=self.type_hint)
 
             if event.is_order():
                 yield Order(data)
 
-            if event.is_return():
+            elif event.is_return():
                 yield Return(data)
 
-            if event.is_subscription_activated():
+            elif event.is_subscription_activated():
                 yield SubscriptionActivated(data)
 
-            if event.is_subscription_deactivated():
+            elif event.is_subscription_deactivated():
                 yield SubscriptionDeactivated(data)
 
-class Event(dict):
-
+class WebhookEvent(object):
     def __init__(self, data={}, type_hint=None):
-        whitelist = set(["id", "live", "processed", "type", "created", "data"])
-        if whitelist.issubset(data.keys()):
-            #a genuine webhook event
-            for k, v in data.items():
-                setattr(self, k, v)
-                for k, v in data.get("data", {}).items():
-                    super().__setitem__(k, v)
-        else:
-            #an api object, which has only some
-            #or none of those properties
-            for key in ["id", "live", "data", "type"]:
-                setattr(self, key, data.get(key))
+        for key in ["id", "live", "processed", "type", "created", "data"]:
+            setattr(self, key, data.get(key))
 
-            for k, v in data.items():
-                super().__setitem__(k, v)
+        self.id = data.get("id", "")
+        self.live = data.get("live", False)
+        self.processed = data.get("processed", False)
+        self.type = data.get("type", type_hint)
+        self.created = data.get("created", datetime.utcnow())
 
-        #override the type if none was found
-        if not(self.type):
-            self.type = type_hint
+        if self.created is not None:
+            if isinstance(self.created, int):
+                self.created = datetime.utcfromtimestamp(self.created // 1000)
+
+        self.data = data.get("data", {})
 
     @abstractproperty
     def model(self):
@@ -71,7 +64,7 @@ class Event(dict):
     def __repr__(self):
         return f"<Event type='{self.type}' id='{self.id}'>"
 
-class Order(Event):
+class Order(WebhookEvent):
 
     def __init__(self, data={}):
         super().__init__(data)
@@ -150,7 +143,7 @@ class Order(Event):
     def __repr__(self):
         return f"<Order id='{self.id}' order='{self.model}' recipients='{self.recipient}'>"
 
-class Return(Event):
+class Return(WebhookEvent):
 
     def __init__(self, data={}):
         super().__init__(data)
@@ -193,7 +186,7 @@ class Return(Event):
         order.total = self.order.total
         return order
 
-class SubscriptionActivated(Event):
+class SubscriptionActivated(WebhookEvent):
     
     def __init__(self, data={}):
         super().__init__(data)
@@ -215,7 +208,7 @@ class SubscriptionActivated(Event):
     def __repr__(self):
         return f"<SubscriptionActivated id='{self.id}' user='{self.model}'>"
 
-class SubscriptionDeactivated(Event):
+class SubscriptionDeactivated(WebhookEvent):
     
     def __init__(self, data={}):
         super().__init__(data)

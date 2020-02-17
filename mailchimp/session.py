@@ -8,7 +8,7 @@ from requests import HTTPError, Session
 
 from ..fastspring.events import Order
 from ..fastspring.utils import get_products
-from ..models import User
+from ..engines.psql.models import User
 from .. import logger, config
 
 

@@ -7,8 +7,8 @@ from pathlib import Path
 from yaml import YAMLError, dump, safe_load
 
 from .. import logger
-from ..engine import Engine
-from ..models import Product
+from ..engines.psql.engine import Engine
+from ..engines.psql.models import Product
 from .session import FastSpring
 
 

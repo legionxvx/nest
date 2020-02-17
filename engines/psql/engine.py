@@ -7,9 +7,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from . import logger, config
+from ... import logger, config
 from .models import Base
-from .types import Singleton
+from ...meta.types import Singleton
 
 
 HOST = config.get("DB_HOST") or environ.get("DB_HOST", "localhost")

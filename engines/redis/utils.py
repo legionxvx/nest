@@ -5,7 +5,7 @@ from time import sleep
 from redis import RedisError
 from redlock import RedLockError
 
-from .. import logger
+from ... import logger
 from .locking import LockFactory
 from .session import RedisInstance
 
