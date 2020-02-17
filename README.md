@@ -14,10 +14,12 @@ Currently it supports the following features:
 ### Prerequisites
 
 - Python 3.7 or newer
-- Pipenv
+- Pipenv or Pip
 
 ```
 $ pipenv install
+or
+$ pip install -r requirements.txt
 ```
 
 ### Installation
