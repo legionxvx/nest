@@ -1,4 +1,4 @@
 *
 !.gitignore
-!.yaml
-!.yml
+!*.yaml
+!*.yml
