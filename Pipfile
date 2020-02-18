@@ -13,6 +13,7 @@ pyyaml = "*"
 psycopg2-binary = "*"
 redlock = "*"
 alembic = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"
