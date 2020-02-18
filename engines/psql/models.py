@@ -295,6 +295,7 @@ class Return(Base):
 
     id = Column(Integer, Sequence("returns_seq"), primary_key=True)
     reference = Column(Text, unique=True, nullable=False)
+    partial = Column(Boolean, nullable=False, default=False)
 
     order_id = Column(
         Integer,

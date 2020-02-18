@@ -1,5 +1,5 @@
 import logging
-from abc import abstractproperty
+from abc import abstractmethod, abstractproperty
 from datetime import datetime
 from json import load
 
@@ -30,9 +30,6 @@ class EventParser(object):
 
 class WebhookEvent(object):
     def __init__(self, data={}, type_hint=None):
-        for key in ["id", "live", "processed", "type", "created", "data"]:
-            setattr(self, key, data.get(key))
-
         self.id = data.get("id", "")
         self.live = data.get("live", False)
         self.processed = data.get("processed", False)
@@ -49,15 +46,19 @@ class WebhookEvent(object):
     def model(self):
         raise NotImplementedError("Derived classes must implement this.")
 
+    @abstractmethod
     def is_order(self):
         return self.type == "order.completed"
 
+    @abstractmethod
     def is_return(self):
         return self.type == "return.created"
 
+    @abstractmethod
     def is_subscription_activated(self):
         return self.type == "subscription.activated"
 
+    @abstractmethod
     def is_subscription_deactivated(self):
         return self.type == "subscription.deactivated"
 
@@ -65,167 +66,214 @@ class WebhookEvent(object):
         return f"<Event type='{self.type}' id='{self.id}'>"
 
 class Order(WebhookEvent):
+    def __init__(self, data={}, session=None):
+        super().__init__(data, type_hint="order.completed")
+        self.session = session
 
-    def __init__(self, data={}):
-        super().__init__(data)
-        self.type = "order.completed"
-
-        self.products = []
-        for item in self.get("items", []):
-            self.products.append(item.get("product", "NO NAME"))
+        if not(self.type == "order.completed"):
+            logger.warning(f"Constructed Order event is type: {self.type}, "
+                           f"but should be type: 'order.completed'")
 
     @property
-    def model(self):
-        created = datetime.utcnow()
-        if hasattr(self, "created"):
-            #FS timestamps have milliseconds
-            created = datetime.utcfromtimestamp(self.created // 1000)
+    def customer(self):
+        customer = self.data.get("customer", {})
+        if self.session:
+            email = customer.get("email", "")
+            query = self.session.query(models.User).filter_by(email=email)
+            customer = query.first()
+        return customer
+    
+    @property
+    def recipients(self):
+        recipients = self.data.get("recipients", []).copy()
+        for i, recipient in enumerate(recipients):
+            info = recipient.get("recipient", {})
+            email = info.get("email", "")
+            if self.session:
+                query = self.session.query(models.User).filter_by(email=email)
+                user = query.first()
+                if user:
+                    recipients[i] = user
+            else:
+                recipients[i] = info
+        return recipients
+    
+    @property
+    def gift(self):
+        if len(self.recipients) > 1:
+            logger.error("Cannot determine gift with multiple recipients.")
+        
+        if len(self.recipients) == 1:
+            if self.session:
+                if self.customer is not self.recipients[0]:
+                    return True
+            else:
+                recipient = self.recipients[0].copy()
+                recipient.pop("address", None)
+                recipient.pop("account", None)
+                if self.customer != recipient:
+                    return True
+        return False
 
+    @property
+    def products(self):
+        products = []
+        for item in self.data.get("items", []):
+            products.append(item.get("product", ""))
+        
+        if self.session:
+            op = models.Product.aliases.overlap(products)
+            query = self.session.query(models.Product).filter(op)
+            products = query.all()
+        return products
+
+    @property
+    def paths(self):
         paths = []
-        for item in self.get("items", []):
+        for item in self.data.get("items", []):
             path = item.get("driver", {}).get("path")
             if path:
                 paths.append(path)
-
-        gift = False
-        if self.get("customer", {}).get("email") != self.recipient.email:
-            gift = True
-
-        kwargs = {
-            "reference": self.get("reference"),
-            "created": created,
-            "live": self.live,
-            "gift": gift,
-            "total": self.get("totalInPayoutCurrency", 0),
-            "discount": self.get("discountInPayoutCurrency", 0),
-            "paths": paths,
-            "coupons": self.get("coupons", []),
-        }
-        return models.Order(**kwargs)
+        return paths
 
     @property
-    def recipient(self):
-        #for now there is only one recipient for every order
-        #including gift purchases. Should this change, you
-        #may want to turn this property into a list
-        recipient = self.get("recipients", [{}])[0]
-        info = recipient.get("recipient", {})
-        address = info.get("address", {})
+    def total(self):
+        return self.data.get("totalInPayoutCurrency", float(0))
 
-        kwargs = {
-            "email": info.get("email"),
-            "first": info.get("first", "John"),
-            "last": info.get("last", "Doe"),
-            "language_code": self.get("language", "en"),
-            "country_code": address.get("country", "US"),
-        }
-
-        return models.User(**kwargs)
-
-    def update_existing_order(self, order):
-        order.reference = self.model.reference
-        order.created = self.model.created
-        order.live = self.model.live
-        order.total = self.model.total
-        order.discount = self.model.discount
-        order.paths = self.model.paths
-        order.coupons = self.model.coupons
-        return order
-
-    def update_existing_recipient(self, recipient):
-        recipient.email = self.recipient.email
-        recipient.first = self.recipient.first
-        recipient.last = self.recipient.last
-        recipient.language_code = self.recipient.language_code
-        recipient.country_code = self.recipient.country_code
-        return recipient
-
-    def __repr__(self):
-        return f"<Order id='{self.id}' order='{self.model}' recipients='{self.recipient}'>"
-
-class Return(WebhookEvent):
-
-    def __init__(self, data={}):
-        super().__init__(data)
-        self.type = "return.created"
-
-        self.products = []
-        for item in self.get("items", []):
-            self.products.append(item.get("product", "NO NAME"))
-
+    @property
+    def discount(self):
+        return self.data.get("discountInPayoutCurrency", float(0))
+    
     @property
     def model(self):
-        original = self.get("original", {})
-        kwargs = {
-            "reference": original.get("reference")
+        args = {
+            "reference": self.data.get("reference"),
+            "created": self.created,
+            "live": self.live,
+            "gift": self.gift,
+            "total": self.total,
+            "discount": self.discount,
+            "paths": self.paths,
+            "coupons": self.data.get("coupons", [])
         }
-        return models.Return(**kwargs)
+
+        if self.session:
+            # @ToDo -> Handle multiple gift recipients
+            args["products"] = self.products
+            args["user"] = self.recipients[0]
+
+        return models.Order(**args)
+
+    def __repr__(self):
+        return (f"<Event (Order) id='{self.id}' "
+                f"customer='{self.recipients[0]}' "
+                f"recipients='{self.recipients}'>")
+
+class Return(WebhookEvent):
+    def __init__(self, data={}, session=None):
+        super().__init__(data, type_hint="return.created")
+        self.session = session
+
+        if not(self.type == "return.created"):
+            logger.warning(f"Constructed Return event is type: {self.type}, "
+                           f"but should be type: 'return.created'")
 
     @property
     def order(self):
-        original = self.get("original", {})
+        original = self.data.get("original", {})
+        reference = original.get("reference", "")
+        if self.session:
+            query = self.session.query(models.Order).filter_by(
+                        reference=reference
+                    )
+            original = query.first()
+        return original
 
-        original_total = original.get("totalInPayoutCurrency", 0)
-        return_total = self.get("totalReturnInPayoutCurrency", 0)
-        new_total = original_total - return_total
+    @property
+    def partial(self):
+        refund_total = self.data.get("totalReturnInPayoutCurrency", float(0))
+        original_total = 0
+
+        if self.session:
+            original_total = self.order.total
+        else:
+            original_total = self.order.get("totalInPayoutCurrency", float(0))
         
-        kwargs = {
-            "reference": original.get("reference"),
-            "created": datetime.utcnow(),
-            "live": original.get("live", False),
-            "gift": False,
-            "total": new_total,
-            "discount": original.get("discountInPayoutCurrency", 0),
-            "paths": [],
-            "coupons": [],
-        }
-        return models.Order(**kwargs)
+        return refund_total != original_total
 
-    def update_existing_order(self, order):
-        order.reference = self.order.reference
-        order.total = self.order.total
-        return order
-
-class SubscriptionActivated(WebhookEvent):
-    
-    def __init__(self, data={}):
-        super().__init__(data)
-        self.type = "subscription.activated"
-    
     @property
     def model(self):
-        account = self.get("account", {})
-        contact = account.get("contact")
-        kwargs = {
+        reference = ""
+        if self.session:
+            reference = self.order.reference
+        else:
+            reference = self.order.get("reference", "")
+
+        args = {
+            "reference": reference,
+            "partial": self.partial
+        }
+        return models.Return(**args)
+
+# @ToDo -> Condense these into their own `SubscriptionEvent` sub-class
+class SubscriptionActivated(WebhookEvent):    
+    def __init__(self, data={}, session=None):
+        super().__init__(data, type_hint="subscription.activated")
+        self.session = session
+
+        if not(self.type == "subscription.activated"):
+            logger.warning(f"Constructed Return event is type: {self.type}, "
+                           f"but should be type: 'subscription.activated'")
+
+    @property
+    def user(self):
+        account = self.data.get("account", {})
+        contact = self.data.get("contact", {})
+        args = {
             "email": contact.get("email"),
             "first": contact.get("first", "John"),
             "last": contact.get("last", "Doe"),
             "language_code": account.get("language", "en"),
             "country_code": account.get("country", "US"),
         }
-        return models.User(**kwargs)
 
-    def __repr__(self):
-        return f"<SubscriptionActivated id='{self.id}' user='{self.model}'>"
+        user = None
+        if self.session:
+            email = contact.get("email")
+            query = self.session.query(models.User).filter_by(email=email)
+            user = query.first()
+
+        user = user or models.User(**args)
+        user.subscribed = self.data.get("active", False)
+        return user
 
 class SubscriptionDeactivated(WebhookEvent):
-    
-    def __init__(self, data={}):
-        super().__init__(data)
-        self.type = "subscription.deactivated"
+    def __init__(self, data={}, session=None):
+        super().__init__(data, type_hint="subscription.deactivated")
+        self.session = session
+
+        if not(self.type == "subscription.deactivated"):
+            logger.warning(f"Constructed Return event is type: {self.type}, "
+                           f"but should be type: 'subscription.deactivated'")
     
     @property
-    def model(self):
-        account = self.get("account", {})
-        contact = account.get("contact")
-        kwargs = {
+    def user(self):
+        account = self.data.get("account", {})
+        contact = self.data.get("contact", {})
+        args = {
             "email": contact.get("email"),
             "first": contact.get("first", "John"),
             "last": contact.get("last", "Doe"),
             "language_code": account.get("language", "en"),
             "country_code": account.get("country", "US"),
         }
-        return models.User(**kwargs)
 
-    def __repr__(self):
-        return f"<SubscriptionDeactivated id='{self.id}' user='{self.model}'>"
+        user = None
+        if self.session:
+            email = contact.get("email")
+            query = self.session.query(models.User).filter_by(email=email)
+            user = query.first()
+
+        user = user or models.User(**args)
+        user.subscribed = self.data.get("active", False)
+        return user
