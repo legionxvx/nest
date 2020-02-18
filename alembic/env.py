@@ -26,10 +26,10 @@ path.append(parent_dir)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from nest.models import Base
+from nest.engines.psql.models import Base
 target_metadata = Base.metadata
 
-from nest.engine import Engine
+from nest.engines.psql.engine import Engine
 url = str(Engine().url)
 config.set_main_option("sqlalchemy.url", url)
 
