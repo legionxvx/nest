@@ -51,18 +51,6 @@ def subscription_inactive_data():
     with open(file, "r") as f:
         yield load(f)
 
-def test_event(order):
-    data = {
-        "id": "asdfghjkl",
-        "live": False,
-        "processed": False,
-        "type": "order.completed",
-        "created": 0
-    }
-    
-    event = WebhookEvent(data)
-    assert(event is not None)
-
 @pytest.mark.skip(not(Engine().connected), reason="Cannot test without database.")
 def test_order_event(session, order_data):
     ord = Order(order_data, session=session)
