@@ -10,7 +10,7 @@ Welcome to Nest's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. autoclass:: nest.types.Singleton
+.. autoclass:: nest.engines.psql.engine.PostgreSQLEngine
 
 
 Indices and tables

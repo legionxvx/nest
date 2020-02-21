@@ -1,67 +1,72 @@
+import logging
 from os import environ
 
 from psycopg2 import OperationalError
 from sqlalchemy import create_engine, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.pool import NullPool
 
-from nest import config, logger
-from nest.engines.psql.models import Base
+from nest.logging import Logger
 from nest.types import Singleton
 
-# HOST = config.get("DB_HOST") or environ.get("DB_HOST", "localhost")
-# PORT = config.get("DB_PORT") or environ.get("DB_PORT", "5432")
-# DATABASE = config.get("DB_NAME") or environ.get("DB_DATABASE", "postgres")
 
-class Engine(metaclass=Singleton):
-    def __init__(self, url=None, auth=None, echo=False, poolclass=None):
-        auth = auth or config.get("DB_AUTH") or (
-                environ.get("PG_USER"), 
-                environ.get("PG_PASS")
-            )
+class PostgreSQLEngine(Engine, metaclass=Singleton):
+    """docstring here
 
-        usr = auth[0] or "foo"
-        pwd = auth[1] or "bar"
-
-        connection_info = {
-            "drivername": "postgresql",
-            "host": "localhost",
-            "port": "5432",
-            "username": usr,
-            "password": pwd,
-            "database": None,
-        }
+        :param Engine: 
+        :param metaclass=Singleton: 
+    """
+    DEFAULT_CONNECTION_INFO = {
+        "drivername": "postgresql",
+        "host": "localhost",
+        "port": "5432",
+        "username": "postgres",
+        "password": "",
+        "database": None,
+    }
         
-        self.url = url or URL(**connection_info)
-        self.connected = False
-        logger.debug(f"Connecting Engine @ {self.url}")
+    def __init__(self, **kwargs):
+        self.error_logger = logging.getLogger("nest")
+        self.transaction_logger = logging.getLogger("nest.transaction")
+
+        connection_info = kwargs.pop("connection_info", {})
+        self.DEFAULT_CONNECTION_INFO.update(connection_info)
 
         try:
-            pc = poolclass or NullPool
-            self.engine = create_engine(self.url, echo=echo, poolclass=pc)
-            Base.metadata.create_all(self.engine)
-            self.connected = True
-        except (SQLAlchemyError, OperationalError) as error:
-            logger.critical(error)
+            meta = create_engine(
+                URL(**self.DEFAULT_CONNECTION_INFO), 
+                **kwargs
+            )
+            self.__dict__ = meta.__dict__
+        except (SQLAlchemyError, OperationalError) as ex:
+            self.error_logger.error("Could not create engine: ", ex)
 
-        self.session_factory = sessionmaker(bind=self.engine)
+        self.session_factory = sessionmaker(bind=self)
+        self.scoped_session_factory = scoped_session(self.session_factory)
 
+    def setup_callbacks(self):
+        """docstring here
+
+            :param self: 
+        """
         @event.listens_for(self.session_factory, "after_commit")
         def receive_after_commit(session):
-            logger.debug("Received commit")
+            self.transaction_logger.debug("@after_commit => Recieved commit.")
 
-    def __call__(self, **kwargs):
-        session = self.session_factory(**kwargs)
-        logger.debug(f"Session @ {session}")
-        return session
+    def session(self, **kwargs):
+        """docstring here
 
-    def set_echo(self, yn):
-        self.engine.echo = bool(yn)
+            :param self: 
+            :param **kwargs: 
+        """
+        return self.session_factory(**kwargs)
 
-    def get_echo(self):
-        return self.engine.echo
-
-    def dispose(self):
-        self.engine.dispose()
+    def scoped_session(self, **kwargs):
+        """docstring here
+        
+            :param self: 
+            :param **kwargs: 
+        """   
+        return self.scoped_session_factory(**kwargs)

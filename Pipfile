@@ -16,6 +16,7 @@ redlock = "*"
 alembic = "*"
 requests = "*"
 colorlog = "*"
+redis = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,1 +1,1 @@
-from nest.engines.psql.engine import Engine
+from nest.engines.psql.engine import PostgreSQLEngine
