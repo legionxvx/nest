@@ -10,7 +10,6 @@ sphinx = "*"
 
 [packages]
 sqlalchemy = "*"
-pyyaml = "*"
 psycopg2-binary = "*"
 redlock = "*"
 alembic = "*"
