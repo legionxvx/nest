@@ -20,11 +20,10 @@ install_requires = [
 ]
 
 setup(
-    name='Foo',
-    version='0.1',
-    description='',
-    author='Foo Bar',
-    author_email='test@testerson.com',
+    name="Foo",
+    version="0.1",
+    description="Lorem ipsum",
+    author="Nikolaus Gullotta",
     packages=['nest'],
     install_requires=install_requires,
 )

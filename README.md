@@ -33,10 +33,9 @@ $ cd nest
 $ pipenv install
 ```
 
-- To install this into a project as a submodule
+- To install using pipenv (subject to change as I figure it out)
 ```
-$ cd your/git/project/
-$ git submodule add git@git.harrisonconsoles.com:marketing/nest.git
+$ pipenv install git+ssh://git@git.harrisonconsoles.com/marketing/nest.git#egg=nest
 ```
 
 ## Configuration
