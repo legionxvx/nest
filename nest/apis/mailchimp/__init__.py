@@ -1,1 +1,1 @@
-from .session import Mailchimp
+from nest.apis.mailchimp.session import Mailchimp

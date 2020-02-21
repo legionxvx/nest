@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from hashlib import md5
 from json import JSONDecodeError, dumps
@@ -6,25 +7,26 @@ from urllib.parse import urljoin
 
 from requests import HTTPError, Session
 
-from nest import config, logger
 from nest.apis.fastspring.events import Order
-from nest.apis.fastspring.utils import get_products
 from nest.engines.psql.models import User
 
 
 class Mailchimp(Session):
-    """Bootstrapped connection to Mailchimp's API using our
-    credentials"""
+    """docstring here
+
+        :param Session: 
+    """
     def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
+        self.logger = logging.getLogger("nest")
         self.prefix = prefix or "https://us14.api.mailchimp.com/3.0/"
         self.lists = {}
 
         super().__init__(**kwargs)
 
-        self.auth = auth or config.get("FS_AUTH") or (
-                        environ.get("MAILCHIMP_AUTH_USER", "foo"),
-                        environ.get("MAILCHIMP_AUTH_TOKEN", "bar")
-                    )
+        self.auth = auth or (
+            environ.get("MAILCHIMP_AUTH_USER", "foo"),
+            environ.get("MAILCHIMP_AUTH_TOKEN", "bar")
+        )
         self.auth = (self.auth[0], self.auth[1])
         self.hooks = hooks
 
@@ -32,7 +34,10 @@ class Mailchimp(Session):
             self.headers.update({'Connection':'close'})
 
         self.get_lists()
-        self.default_list = self.lists.get(environ.get("MAILCHIMP_LIST"))
+        self.default_list = self.lists.get(
+            environ.get("MAILCHIMP_LIST", ""), 
+            ""
+        )
         self.connected = self.get("/").ok
 
     @classmethod
@@ -43,23 +48,18 @@ class Mailchimp(Session):
                 *args, **kwargs):
         if default:
             if not(self.default_list):
-                logger.error("Trying to request to Mailchimp "
+                self.logger.error("Trying to request to Mailchimp "
                                         "with defaults, except there is no "
                                         "default list!")
             endpoint = endpoint or "members"
             list_id = list_id or self.default_list
             parts = ["lists", list_id, endpoint, url]
-            url = urljoin(self.prefix, "/".join(parts))
+            url = urljoin(self.prefix or "", "/".join(parts))
         else:
             url = urljoin(self.prefix, url)
         return super().request(method, url, *args, **kwargs)
 
     def get_lists(self):
-        """Create a map of list_name -> list_id
-
-        Returns:
-            [dict] -- Map of list_name -> list_id
-        """
         res = self.get("lists", default=False)
 
         if res.ok:
@@ -78,10 +78,10 @@ class Mailchimp(Session):
             res.raise_for_status()
             data = res.json()
         except (HTTPError) as error:
-            logger.error(f"Could not get orders: {error}")
+            self.logger.error(f"Could not get orders: {error}")
             return []
         except (JSONDecodeError):
-            logger.error(f"Could not decode response JSON: {error}")
+            self.logger.error(f"Could not decode response JSON: {error}")
             return []
 
         members = data.get("members", [])
@@ -96,10 +96,10 @@ class Mailchimp(Session):
                 res.raise_for_status()
                 data = res.json()
             except (HTTPError) as error:
-                logger.error(f"Could not get orders: {error}")
+                self.logger.error(f"Could not get orders: {error}")
                 yield []
             except (JSONDecodeError):
-                logger.error(f"Could not decode response JSON: "
+                self.logger.error(f"Could not decode response JSON: "
                                          f"{error}")
                 yield []
 
@@ -108,27 +108,6 @@ class Mailchimp(Session):
             offset += len(members)
 
     def get_member(self, email=None, from_user=None, list_id=None):
-        """Get the member resource located on a given list
-
-        The email is md5 hashed and then requested from :list_id:
-
-        Keyword Arguments:
-            email {str} -- Email string (default: {None})
-
-            from_user {nest.models.User} -- A User object
-                                            (default: {None})
-
-            list_id {str} -- The list_id to request from
-                             (default: {None})
-
-        Raises:
-            Exception: If neither :email: nor :from_user: are specified
-            TypeError: If :from_user: is not a valid type
-
-        Returns:
-            [requests.models.Response] -- The repsonse to the GET
-                                          request
-        """
         if not(email or from_user):
             raise Exception("Must specify an email or user object to check.")
 
@@ -141,27 +120,6 @@ class Mailchimp(Session):
         return self.get(resource, list_id=list_id)
 
     def unsubscribe_member(self, email=None, from_user=None, list_id=None):
-        """Unsubscribe the member resource located on a given list
-
-        The email is md5 hashed and then requested form :list_id:
-
-        Keyword Arguments:
-            email {str} -- Email string (default: {None})
-
-            from_user {nest.models.User} -- A User object
-                                            (default: {None})
-
-            list_id {str} -- The list_id to request from
-                             (default: {None})
-
-        Raises:
-            Exception: If neither :email: nor :from_user: are specified
-            TypeError: If :from_user: is not a valid type
-
-        Returns:
-            [requests.models.Response] -- The repsonse to the GET
-                                          request
-        """
         if from_user:
             if not(isinstance(from_user, User)):
                 raise TypeError(f"Cannot unsubscibe user of {type(from_user)}.")
@@ -173,18 +131,6 @@ class Mailchimp(Session):
         return self.patch(resource, data=dumps(payload), list_id=list_id)
 
     def create_user(self, user, list_id=None):
-        """Create a list member
-
-        Arguments:
-            user {nest.models.User} -- The User object to create
-
-        Raises:
-            TypeError: If :user: is not a valid type
-
-        Returns:
-            [requests.Models.Response] -- The repsonse to the POST
-                                          request
-        """
         if not(isinstance(user, User)):
             raise TypeError(f"Cannot create user from {type(user)}.")
 
@@ -215,22 +161,11 @@ class Mailchimp(Session):
 
         res = self.post("", data=dumps(payload), list_id=None)
         if not(res.ok):
-            logger.error(f"Could not create user @ {list_id} - "
+            self.logger.error(f"Could not create user @ {list_id} - "
                                      f"{res.content}")
         return res
 
     def update_user(self, user, list_id=None):
-        """Update a list member's information and tags
-
-        Arguments:
-            user {nest.models.User} -- The User object to update
-
-        Raises:
-            TypeError: If :user: is not a valid type
-
-        Returns:
-            [tuple] -- PATCH and POST responses
-        """
         if not(isinstance(user, User)):
             raise TypeError(f"Cannot user user from {type(user)}.")
 
@@ -244,9 +179,8 @@ class Mailchimp(Session):
         owned_product_names = [product.name for product in user.products]
 
         tags = [{'name':item.name, 'status':'active'} for item in user.products]
-        tags.extend([{'name':item, "status":"inactive"} for item in \
-            get_products()
-        if not item in owned_product_names])
+        # tags.extend([{'name':item, "status":"inactive"} for item in \
+        #             get_products() if not item in owned_product_names])
 
         if not(len(user.products) >= 1):
             tags.extend([{'name':'No-items', 'status':'active'}])

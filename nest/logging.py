@@ -5,7 +5,6 @@ from colorlog import ColoredFormatter, StreamHandler
 
 
 class Logger(object):
-
     LOG_LEVELS = {
         "critical": logging.CRITICAL,
         "error":    logging.ERROR,

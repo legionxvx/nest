@@ -3,11 +3,14 @@ from abc import abstractmethod, abstractproperty
 from datetime import datetime
 from json import load
 
-from nest import logger
 from nest.engines.psql import models
 
 
 class EventParser(object):
+    """docstring here
+    
+        :param object: 
+    """
     def __init__(self, segment=[], type_hint=None):
         self.segment = segment
         self.type_hint = type_hint
@@ -29,12 +32,17 @@ class EventParser(object):
                 yield SubscriptionDeactivated(data)
 
 class WebhookEvent(object):
+    """docstring here
+
+        :param object: 
+    """
     def __init__(self, data={}, type_hint=None):
         self.id = data.get("id", "")
         self.live = data.get("live", False)
         self.processed = data.get("processed", False)
         self.type = data.get("type", type_hint)
         self.created = data.get("created", datetime.utcnow())
+        self.logger = logging.getLogger("nest")
 
         if self.created is not None:
             if isinstance(self.created, int):
@@ -66,6 +74,10 @@ class WebhookEvent(object):
         return f"<Event type='{self.type}' id='{self.id}'>"
 
 class Order(WebhookEvent):
+    """docstring here
+
+        :param WebhookEvent: 
+    """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="order.completed")
         self.session = session
@@ -170,6 +182,10 @@ class Order(WebhookEvent):
                 f"recipients='{self.recipients}'>")
 
 class Return(WebhookEvent):
+    """docstring here
+
+        :param WebhookEvent: 
+    """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="return.created")
         self.session = session
@@ -216,7 +232,11 @@ class Return(WebhookEvent):
         return models.Return(**args)
 
 # @ToDo -> Condense these into their own `SubscriptionEvent` sub-class
-class SubscriptionActivated(WebhookEvent):    
+class SubscriptionActivated(WebhookEvent):
+    """docstring here
+
+        :param WebhookEvent: 
+    """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.activated")
         self.session = session
@@ -248,6 +268,9 @@ class SubscriptionActivated(WebhookEvent):
         return user
 
 class SubscriptionDeactivated(WebhookEvent):
+    """docstring here
+        :param WebhookEvent: 
+    """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.deactivated")
         self.session = session

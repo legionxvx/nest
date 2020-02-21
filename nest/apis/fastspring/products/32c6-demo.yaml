@@ -1,8 +1,0 @@
-aliases:
-- mixbus32c-v6-demo 
-name: Mixbus32C v6 Demo
-price: 0
-set: 32C
-current: true
-version: 6
-demo: true

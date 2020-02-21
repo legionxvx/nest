@@ -1,9 +1,0 @@
-aliases:
-  - xt-dm
-name: XT-DM Dyno-Mite
-price: 29
-set: XT
-signer: helium
-token: XTDM
-part: xt_dm
-current: true

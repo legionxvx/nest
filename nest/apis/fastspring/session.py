@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from json import JSONDecodeError
 from os import environ
@@ -5,21 +6,23 @@ from urllib.parse import urljoin
 
 from requests import HTTPError, Session
 
-from nest import config, logger
-
 
 class FastSpring(Session):
-    """Custom session with FastSpring's API prefixed"""
+    """docstring here
+
+        :param Session: 
+    """
     def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
+        self.logger = logging.getLogger("nest")
         self.prefix = prefix or "https://api.fastspring.com"
 
         super().__init__(**kwargs)
 
         self.hooks = hooks
-        self.auth = auth or config.get("FS_AUTH") or (
-                        environ.get("FS_AUTH_USER", b""),
-                        environ.get("FS_AUTH_PASS", b"")
-                    )
+        self.auth = auth or (
+            environ.get("FS_AUTH_USER", b""), 
+            environ.get("FS_AUTH_PASS", b"")
+        )
         self.auth = (self.auth[0], self.auth[1])
 
         if close:
@@ -35,11 +38,6 @@ class FastSpring(Session):
         return self.get("products")
 
     def get_products(self, products):
-        """Get information for one or more prodcuts
-
-        Arguments:
-            products {list} -- Product ID's
-        """
         joined_ids = ",".join(products)
         url = urljoin("products/", joined_ids)
         return self.get(url)
@@ -52,10 +50,10 @@ class FastSpring(Session):
             res.raise_for_status()
             data = res.json()
         except (HTTPError) as error:
-            logger.error(f"Could not get orders: {error}")
+            self.logger.error(f"Could not get orders: {error}")
             return []
         except (JSONDecodeError) as error:
-            logger.error(f"Could not decode response JSON: {error}")
+            self.logger.error(f"Could not decode response JSON: {error}")
             return []
 
         yield data.get("events", [])
@@ -68,10 +66,10 @@ class FastSpring(Session):
                 res.raise_for_status()
                 data = res.json()
             except (HTTPError) as error:
-                logger.error(f"Could not get orders on page {page}: {error}")
+                self.logger.error(f"Could not get orders on page {page}: {error}")
                 yield []
             except (JSONDecodeError) as error:
-                logger.error(f"Could not decode response JSON on page {page}: "
+                self.logger.error(f"Could not decode response JSON on page {page}: "
                              f"{error}")
                 yield []
             yield data.get("events")
@@ -84,10 +82,10 @@ class FastSpring(Session):
             res.raise_for_status()
             data = res.json()
         except (HTTPError) as error:
-            logger.error(f"Could not get orders: {error}")
+            self.logger.error(f"Could not get orders: {error}")
             return []
         except (JSONDecodeError) as error:
-            logger.error(f"Could not decode response JSON: {error}")
+            self.logger.error(f"Could not decode response JSON: {error}")
             return []
 
         yield data.get("orders", [])
@@ -99,25 +97,15 @@ class FastSpring(Session):
                 res.raise_for_status()
                 data = res.json()
             except (HTTPError) as error:
-                logger.error(f"Could not get orders on page {page}: {error}")
+                self.logger.error(f"Could not get orders on page {page}: {error}")
                 yield []
             except (JSONDecodeError) as error:
-                logger.error(f"Could not decode response JSON on page {page}: "
+                self.logger.error(f"Could not decode response JSON on page {page}: "
                              f"{error}")
                 yield []
             yield data.get("orders")
 
     def get_parents(self, with_bundles=False):
-        """Get information about "parent" products and their children
-
-        Keyword Arguments:
-            with_bundles {bool} -- Control whether bundles are
-                                   whitelisted (default: {False})
-
-        Returns:
-            [dict] -- A dict with parent id as key and a list of
-                      children as value
-        """
         products = []
         res = self.get_products_list()
 
@@ -126,10 +114,10 @@ class FastSpring(Session):
             json_data = res.json()
             products.extend(json_data.get("products", []))
         except (HTTPError) as error:
-            logger.error(f"Could not get products list: {error}")
+            self.logger.error(f"Could not get products list: {error}")
             return {}
         except (JSONDecodeError) as error:
-            logger.error(f"Could not decode response JSON: {error}")
+            self.logger.error(f"Could not decode response JSON: {error}")
             return {}
 
         if len(products) == 0:
@@ -143,10 +131,10 @@ class FastSpring(Session):
             json_data = res.json()
             data.extend(json_data.get("products", []))
         except (HTTPError) as error:
-            logger.error(f"Could not get product data: {error}")
+            self.logger.error(f"Could not get product data: {error}")
             return {}
         except (JSONDecodeError) as error:
-            logger.error(f"Could not decode response JSON: {error}")
+            self.logger.error(f"Could not decode response JSON: {error}")
             return {}
 
         parent_information = defaultdict(list)
@@ -181,5 +169,5 @@ class FastSpring(Session):
         try:
             res.raise_for_status()
         except (HTTPError) as error:
-            logger.error(f"Could not mark event processed: {error}")
+            self.logger.error(f"Could not mark event processed: {error}")
         return res
