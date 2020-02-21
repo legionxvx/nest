@@ -1,9 +1,0 @@
-DB_AUTH: [foo, bar]
-FS_AUTH: [foo, bar]
-MC_AUTH: [foo, bar]
-
-DB_HOST: localhost
-DB_PORT: 5432
-
-RD_HOST: localhost
-RD_PORT: 6379

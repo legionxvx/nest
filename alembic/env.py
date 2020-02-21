@@ -5,8 +5,6 @@ from sqlalchemy import pool
 
 from alembic import context
 
-context.configure
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -15,12 +13,10 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 
-# Dumb hack to get parent dir in path
-from os import getcwd
-from os.path import abspath, join
+from pathlib import Path
 from sys import path
-parent_dir = abspath(join(getcwd(), ".."))
-path.append(parent_dir)
+parent = Path(".").resolve()
+path.append(str(parent))
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -28,10 +24,6 @@ path.append(parent_dir)
 # target_metadata = mymodel.Base.metadata
 from nest.engines.psql.models import Base
 target_metadata = Base.metadata
-
-from nest.engines.psql.engine import Engine
-url = str(Engine().url)
-config.set_main_option("sqlalchemy.url", url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -57,7 +49,6 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -79,8 +70,9 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata,
-            compare_type=True,
+            connection=connection, 
+            target_metadata=target_metadata,
+            compare_types=True
         )
 
         with context.begin_transaction():
