@@ -35,17 +35,80 @@
 <div class="toctree-wrapper compound">
 </div>
 <dl class="class">
+<dt id="nest.engines.psql.engine.SelfDestructingSession">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.engine.</code><code class="sig-name descname">SelfDestructingSession</code><span class="sig-paren">(</span><em class="sig-param">factory</em>, <em class="sig-param">session</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.SelfDestructingSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>scoped_session</cite> that will automatically remove itself from 
+the Scoped Session registry when this wrapper object falls out of 
+scope.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="nest.engines.psql.engine.PostgreSQLEngine">
 <em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.engine.</code><code class="sig-name descname">PostgreSQLEngine</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.PostgreSQLEngine" title="Permalink to this definition">¶</a></dt>
-<dd><p>docstring here</p>
+<dd><p>An <cite>Engine</cite> connected a PostgreSQL database</p>
+<dl class="method">
+<dt id="nest.engines.psql.engine.PostgreSQLEngine.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param">event</em>, <em class="sig-param">func</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.PostgreSQLEngine.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds event callback function. List of events is available</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>Engine</strong> – </p></li>
-<li><p><strong>metaclass=Singleton</strong> – </p></li>
+<li><p><strong>event</strong> – Name of the event</p></li>
+<li><p><strong>func</strong> – Callback function</p></li>
+<li><p><strong>*args</strong> – <p>Passed to event.listen</p>
+</p></li>
+<li><p><strong>**kwargs</strong> – <p>Passed to event.listen</p>
+</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.engine.PostgreSQLEngine.remove_listener">
+<code class="sig-name descname">remove_listener</code><span class="sig-paren">(</span><em class="sig-param">event</em>, <em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.PostgreSQLEngine.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes event callback</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> – Name of the event</p></li>
+<li><p><strong>func</strong> – Callback function</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.engine.PostgreSQLEngine.scoped_session">
+<code class="sig-name descname">scoped_session</code><span class="sig-paren">(</span><em class="sig-param">self_destruct=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.PostgreSQLEngine.scoped_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <cite>scoped_session</cite> for querying the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>self_destruct=True</strong> – Returns a</p>
+</dd>
+</dl>
+<p><cite>SelfDestructingSession</cite> instead of a normal 
+<cite>scoped_session</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <p>Passed to <cite>Session</cite> constructor</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.engine.PostgreSQLEngine.session">
+<code class="sig-name descname">session</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.PostgreSQLEngine.session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <cite>Session</cite> for querying the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <p>Passed to <cite>Session</cite> constructor</p>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>

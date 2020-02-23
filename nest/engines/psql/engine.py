@@ -6,17 +6,25 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
 
 from nest.logging import Logger
 from nest.types import Singleton
 
+class SelfDestructingSession(Session):
+    """A `scoped_session` that will automatically remove itself from 
+    the Scoped Session registry when this wrapper object falls out of 
+    scope.
+    """
+    def __init__(self, factory, session):
+        self.__dict__ == session.__dict__
+        self.factory = factory
+
+    def __del__(self):
+        self.factory.remove()
 
 class PostgreSQLEngine(Engine, metaclass=Singleton):
-    """docstring here
-
-        :param Engine: 
-        :param metaclass=Singleton: 
+    """An `Engine` connected a PostgreSQL database
     """
     DEFAULT_CONNECTION_INFO = {
         "drivername": "postgresql",
@@ -41,32 +49,48 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
             )
             self.__dict__ = meta.__dict__
         except (SQLAlchemyError, OperationalError) as ex:
-            self.error_logger.error("Could not create engine: ", ex)
+            self.error_logger.error(f"Could not create engine:{ex}")
 
         self.session_factory = sessionmaker(bind=self)
         self.scoped_session_factory = scoped_session(self.session_factory)
 
-    def setup_callbacks(self):
-        """docstring here
+    def add_listener(self, event, func, *args, **kwargs):
+        """Adds event callback function. List of events is available 
 
-            :param self: 
+            :param event: Name of the event
+            :param func: Callback function
+            :param *args: Passed to event.listen
+            :param **kwargs: Passed to event.listen
         """
-        @event.listens_for(self.session_factory, "after_commit")
-        def receive_after_commit(session):
-            self.transaction_logger.debug("@after_commit => Recieved commit.")
+        event.listen(self, event, func, *args, **kwargs)
+
+    def remove_listener(self, event, func):
+        """Removes event callback
+
+            :param event: Name of the event
+            :param func: Callback function
+        """
+        event.remove(self, event, func)
 
     def session(self, **kwargs):
-        """docstring here
+        """Create a `Session` for querying the database
 
-            :param self: 
-            :param **kwargs: 
+            :param **kwargs: Passed to `Session` constructor
         """
         return self.session_factory(**kwargs)
 
-    def scoped_session(self, **kwargs):
-        """docstring here
-        
-            :param self: 
-            :param **kwargs: 
-        """   
+    def scoped_session(self, self_destruct=True, **kwargs):
+        """Create a `scoped_session` for querying the database
+            
+            :param self_destruct=True: Returns a 
+            `SelfDestructingSession` instead of a normal 
+            `scoped_session`
+
+            :param **kwargs: Passed to `Session` constructor
+        """
+        if self_destruct:
+            return SelfDestructingSession(
+                self.scoped_session_factory,
+                self.scoped_session_factory(**kwargs),
+            )
         return self.scoped_session_factory(**kwargs)

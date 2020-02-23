@@ -10,6 +10,12 @@ Welcome to Nest's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. autoclass:: nest.engines.psql.engine.SelfDestructingSession
+   :members:
+
+.. autoclass:: nest.engines.psql.engine.PostgreSQLEngine
+   :members:
+
 
 Indices and tables
 ==================
