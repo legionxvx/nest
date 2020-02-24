@@ -12,12 +12,7 @@ from nest.logging import Logger
 from testing.postgresql import Postgresql
 
 @pytest.fixture(scope="module")
-def url():
-    with Postgresql() as psql:
-        yield psql.url()
-
-@pytest.fixture(scope="module")
-def engine(url):
+def engine():
     with Postgresql() as psql:
         yield PostgreSQLEngine(url=psql.url())
 
