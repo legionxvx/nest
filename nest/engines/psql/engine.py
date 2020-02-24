@@ -1,19 +1,20 @@
 import logging
 from os import environ
 
-from psycopg2 import OperationalError
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import URL
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import scoped_session, sessionmaker, Session
+from sqlalchemy.event import contains, listen, remove
+from sqlalchemy.exc import (InvalidRequestError, OperationalError,
+                            SQLAlchemyError)
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
-from nest.logging import Logger
 from nest.types import Singleton
 
+
 class SelfDestructingSession(Session):
-    """A `scoped_session` that will automatically remove itself from 
-    the Scoped Session registry when this wrapper object falls out of 
+    """A `Session` that will automatically remove itself from
+    the Scoped Session registry when this wrapper object falls out of
     scope.
     """
     def __init__(self, factory, session):
@@ -24,8 +25,7 @@ class SelfDestructingSession(Session):
         self.factory.remove()
 
 class PostgreSQLEngine(Engine, metaclass=Singleton):
-    """An `Engine` connected a PostgreSQL database
-    """
+    """An `Engine` connected a PostgreSQL database"""
     DEFAULT_CONNECTION_INFO = {
         "drivername": "postgresql",
         "host": "localhost",
@@ -34,7 +34,6 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
         "password": "",
         "database": None,
     }
-        
     def __init__(self, **kwargs):
         self.error_logger = logging.getLogger("nest")
         self.transaction_logger = logging.getLogger("nest.transaction")
@@ -44,25 +43,39 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
 
         try:
             meta = create_engine(
-                URL(**self.DEFAULT_CONNECTION_INFO), 
+                URL(**self.DEFAULT_CONNECTION_INFO),
                 **kwargs
             )
-            self.__dict__ = meta.__dict__
-        except (SQLAlchemyError, OperationalError) as ex:
-            self.error_logger.error(f"Could not create engine:{ex}")
+            self.__dict__.update(meta.__dict__)
+        except (SQLAlchemyError) as ex:
+            self.error_logger.error(f"Could not create engine: {ex}")
+
+        try:
+            with self.connect():
+                self.connected = True
+        except (OperationalError) as ex:
+            self.connected = False
+            self.error_logger.error(f"Cannot connect to database: {ex}")
+
 
         self.session_factory = sessionmaker(bind=self)
         self.scoped_session_factory = scoped_session(self.session_factory)
 
     def add_listener(self, event, func, *args, **kwargs):
-        """Adds event callback function. List of events is available 
+        """Adds event callback function. List of events is available
 
             :param event: Name of the event
             :param func: Callback function
             :param *args: Passed to event.listen
             :param **kwargs: Passed to event.listen
         """
-        event.listen(self, event, func, *args, **kwargs)
+        if not(contains(self, event, func)):
+            try:
+                listen(self, event, func, *args, **kwargs)
+            except (InvalidRequestError) as ex:
+                message = f"Cannot assign listener to `{event}`: {ex}"
+                self.error_logger.error(message)
+
 
     def remove_listener(self, event, func):
         """Removes event callback
@@ -70,7 +83,12 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
             :param event: Name of the event
             :param func: Callback function
         """
-        event.remove(self, event, func)
+        if contains(self, event, func):
+            try:
+                remove(self, event, func)
+            except (InvalidRequestError) as ex:
+                message = f"Cannot remove listener from `{event}`: {ex}"
+                self.error_logger.error(message)
 
     def session(self, **kwargs):
         """Create a `Session` for querying the database
@@ -81,9 +99,9 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
 
     def scoped_session(self, self_destruct=True, **kwargs):
         """Create a `scoped_session` for querying the database
-            
-            :param self_destruct=True: Returns a 
-            `SelfDestructingSession` instead of a normal 
+
+            :param self_destruct=True: Returns a
+            `SelfDestructingSession` instead of a normal
             `scoped_session`
 
             :param **kwargs: Passed to `Session` constructor
