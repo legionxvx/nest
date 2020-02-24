@@ -1,21 +1,33 @@
-import pytest
+from datetime import datetime
 
-from nest.engines import PostgreSQLEngine
-from nest.engines.psql.engine import SelfDestructingSession
+import pytest
+from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.orm import Session
 
 from nest.config import Config
+from nest.engines import PostgreSQLEngine
+from nest.engines.psql.engine import SelfDestructingSession
 from nest.logging import Logger
 
-VALID_CONNECTION = False
+from testing.postgresql import Postgresql
 
 @pytest.fixture(scope="module")
-def engine():
-    engine = PostgreSQLEngine()
-    VALID_CONNECTION = engine.connected
-    yield engine
+def url():
+    with Postgresql() as psql:
+        yield psql.url()
 
-@pytest.mark.skipif(not(VALID_CONNECTION), reason="Needs valid DB connection.")
+@pytest.fixture(scope="module")
+def engine(url):
+    with Postgresql() as psql:
+        yield PostgreSQLEngine(url=psql.url())
+
+def test_engine_basic(engine):
+    assert(isinstance(engine.dialect, psycopg2.dialect))
+
+    for row in engine.execute("SELECT current_timestamp"):
+        for date in row:
+            assert(isinstance(date, datetime))
+
 def test_engine_callback_registration(engine):
     counter = 0
     def callback(*args, **kwargs):
@@ -32,7 +44,6 @@ def test_engine_callback_registration(engine):
 
     assert counter == 1
 
-@pytest.mark.skipif(not(VALID_CONNECTION), reason="Needs valid DB connection.")
 def test_session_checkout(engine):
     session = engine.session()
     assert(isinstance(session, Session))
@@ -42,3 +53,8 @@ def test_session_checkout(engine):
 
     session = engine.scoped_session(self_destruct=False)
     assert(isinstance(session, Session))
+
+def test_engine_execute(engine):
+    for row in engine.execute("SELECT current_timestamp"):
+        for date in row:
+            assert(isinstance(date, datetime))

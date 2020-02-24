@@ -34,16 +34,18 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
         "password": "",
         "database": None,
     }
-    def __init__(self, **kwargs):
+    def __init__(self, url=None, **kwargs):
         self.error_logger = logging.getLogger("nest")
         self.transaction_logger = logging.getLogger("nest.transaction")
 
-        connection_info = kwargs.pop("connection_info", {})
-        self.DEFAULT_CONNECTION_INFO.update(connection_info)
+        if not(url):
+            connection_info = kwargs.pop("connection_info", {})
+            connection_info.pop("drivername", None)
+            self.DEFAULT_CONNECTION_INFO.update(connection_info)
 
         try:
             meta = create_engine(
-                URL(**self.DEFAULT_CONNECTION_INFO),
+                url or URL(**self.DEFAULT_CONNECTION_INFO),
                 **kwargs
             )
             self.__dict__.update(meta.__dict__)
