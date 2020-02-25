@@ -9,6 +9,7 @@ from sqlalchemy.exc import (InvalidRequestError, OperationalError,
                             SQLAlchemyError)
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
+from nest.engines.psql.models import Base
 from nest.types import Singleton
 
 
@@ -59,9 +60,10 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
             self.connected = False
             self.error_logger.error(f"Cannot connect to database: {ex}")
 
-
         self.session_factory = sessionmaker(bind=self)
         self.scoped_session_factory = scoped_session(self.session_factory)
+
+        Base.metadata.create_all(self)
 
     def add_listener(self, event, func, *args, **kwargs):
         """Adds event callback function. List of events is available
@@ -77,7 +79,6 @@ class PostgreSQLEngine(Engine, metaclass=Singleton):
             except (InvalidRequestError) as ex:
                 message = f"Cannot assign listener to `{event}`: {ex}"
                 self.error_logger.error(message)
-
 
     def remove_listener(self, event, func):
         """Removes event callback
