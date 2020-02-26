@@ -19,7 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects.postgresql.array import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
 
@@ -67,6 +67,9 @@ class User(Base):
         :param subscribed:
 
         :param orders:
+
+        :param products:
+        :param earliest_order_date:
     """
     __tablename__ = "users"
 
@@ -94,16 +97,8 @@ class User(Base):
     def products(self):
         products = []
         for order in self.orders:
-            skip = False
-
-            total = 0
-            for ret in order.returns:
-                if not(ret.partial) or ret.amount >= order.total:
-                    skip = True
-                total += ret.amount
-
-            if total >= order.total:
-                skip = True
+            if order.returned:
+                continue
 
             for product in order.products:
                 if not(product in products):
@@ -115,7 +110,7 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
-                        where(not_(Order.id.in_(select([Return.order_id])))).\
+                        where(not_(Order.returned)).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
@@ -129,7 +124,7 @@ class User(Base):
     @earliest_order_date.expression
     def earliest_order_date(cls):
         _xpr = func.min(Order.date)
-        return select([_xpr]).where(Order.user_id == cls.id).label('min_date')
+        return select([_xpr]).where(Order.user_id == cls.id).label('min-date')
 
     @hybrid_property
     def owns_any_paid(self):
@@ -148,119 +143,66 @@ class User(Base):
                         where(Product.price > 0)
         return statement.label("any-paid")
 
-    @hybrid_property
-    def owns_any_ava(self):
+    @hybrid_method
+    def owns_any_in_set(self, value):
+        """docstring here
+
+            :param value:
+        """
         for product in self.products:
-            if product.set == "AVA" and not(product.demo):
+            if product.set == value:
                 return True
         return False
 
-    @owns_any_ava.expression
-    def owns_any_ava(cls):
+    @owns_any_in_set.expression
+    def owns_any_in_set(cls, value):
+        statement = select([True]).\
+                    where(Order.user_id == cls.id).\
+                    where(Order.id == OrderProductAssociation.order_id).\
+                    where(Product.id == OrderProductAssociation.product_id).\
+                    where(and_(Product.set == value, not_(Product.demo)))
+        return statement.label(f"owns-any-{value}")
+
+    @hybrid_method
+    def owns_current_in_set(self, value):
+        """docstring here
+
+            :param value:
+        """
+        for product in self.products:
+            if product.set == value and product.current and not(product.demo):
+                return True
+        return False
+
+    @owns_current_in_set.expression
+    def owns_current_in_set(cls, value):
         statement = select([True]).\
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "AVA", not_(Product.demo)))
-        return statement.label("any-ava")
+                        where(and_(Product.set == set, Product.current, not_(Product.demo)))
+        return statement.label(f"any-current-{value}")
 
-    @hybrid_property
-    def owns_any_mixbus(self):
-        for product in self.products:
-            if product.set == "Mixbus" and not(product.demo):
-                return True
-        return False
+    @hybrid_method
+    def highest_version_in_set(self, value):
+        """docstring here
 
-    @owns_any_mixbus.expression
-    def owns_any_mixbus(cls):
-        statement = select([True]).\
-                        where(Order.user_id == cls.id).\
-                        where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "Mixbus", not_(Product.demo)))
-        return statement.label("any-mixbus")
-
-    @hybrid_property
-    def owns_current_mixbus(self):
-        for product in self.products:
-            if product.set == "Mixbus" and product.current and not(product.demo):
-                return True
-        return False
-
-    @owns_current_mixbus.expression
-    def owns_current_mixbus(cls):
-        statement = select([True]).\
-                        where(Order.user_id == cls.id).\
-                        where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "Mixbus", Product.current, not_(Product.demo)))
-        return statement.label("any-current-mixbus")
-
-    @hybrid_property
-    def owns_any_32c(self):
-        for product in self.products:
-            if product.set == "32C" and not(product.demo):
-                return True
-        return False
-
-    @owns_any_32c.expression
-    def owns_any_32c(cls):
-        statement = select([True]).\
-                        where(Order.user_id == cls.id).\
-                        where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "32C", not(Product.demo)))
-        return statement.label("any-32c")
-
-    @hybrid_property
-    def owns_current_32c(self):
-        for product in self.products:
-            if product.set == "32C" and product.current and not(product.demo):
-                return True
-        return False
-
-    @owns_current_32c.expression
-    def owns_current_32c(cls):
-        statement = select([True]).\
-                        where(Order.user_id == cls.id).\
-                        where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "32C", Product.current, not(Product.demo)))
-        return statement.label("any-current-32c")
-
-    @hybrid_property
-    def highest_version_of_mixbus(self):
+            :param value:
+        """
         m_versions = [0]
         for product in self.products:
-            if product.set == "Mixbus" and not(product.demo):
+            if product.set == value and not(product.demo):
                 m_versions.append(product.version)
         return max(m_versions)
 
-    @highest_version_of_mixbus.expression
-    def highest_version_of_mixbus(cls):
+    @highest_version_in_set.expression
+    def highest_version_in_set(cls, value):
         statement = select([func.max(Product.version)]).\
                         where(Order.user_id == cls.id).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "Mixbus", not(Product.demo)))
-        return statement.label("highest-mixbus-version")
-
-    @hybrid_property
-    def highest_version_of_32c(self):
-        c_versions = [0]
-        for product in self.products:
-            if product.set == "32C" and not(product.demo):
-                c_versions.append(product.version)
-        return max(c_versions)
-
-    @highest_version_of_32c.expression
-    def highest_version_of_32c(cls):
-        statement = select([func.max(Product.version)]).\
-                        where(Order.user_id == cls.id).\
-                        where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == "32C", not(Product.demo)))
-        return statement.label("highest-32c-version")
+                        where(and_(Product.set == value, not(Product.demo)))
+        return statement.label(f"highest-version-of-{value}")
 
 class Order(Base):
     """docstring here
@@ -280,6 +222,8 @@ class Order(Base):
         :param user_id:
         :param products:
         :param returns:
+
+        :param returned:
     """
     __tablename__ = "orders"
 
@@ -297,7 +241,11 @@ class Order(Base):
 
     user_id = Column(
         Integer,
-        ForeignKey("users.id", onupdate="cascade", ondelete="cascade"),
+        ForeignKey(
+            "users.id",
+            onupdate="cascade",
+            ondelete="cascade"
+        ),
         index=True
     )
 
@@ -314,6 +262,26 @@ class Order(Base):
         cascade="save-update"
     )
 
+    @hybrid_property
+    def returned(self):
+        if len(self.returns) == 0:
+            return False
+
+        returned_total = 0
+        for ret in self.returns:
+            if not(ret.partial):
+                return True
+            returned_total += ret.amount
+
+        return returned_total >= self.total
+
+    @returned.expression
+    def returned(cls):
+        statement = select([func.sum(Return.amount)]).\
+                        where(Return.order_id == cls.id) \
+                            >= cls.total
+        return statement.label("order-returned")
+
     def __repr__(self):
         return f"<Order reference='{self.reference}'>"
 
@@ -322,17 +290,17 @@ class Return(Base):
 
         :param id:
         :param reference:
-        :param partial:
         :param amount:
 
         :param order_id:
         :param order:
+
+        :param partial:
     """
     __tablename__ = "returns"
 
     id        = Column(Integer, primary_key=True)
     reference = Column(Text, nullable=False)
-    partial   = Column(Boolean, nullable=False, default=False)
     amount    = Column(Integer, nullable=False)
 
     order_id = Column(
@@ -349,6 +317,16 @@ class Return(Base):
         back_populates="returns",
         cascade="save-update"
     )
+
+    @hybrid_property
+    def partial(self):
+        return self.amount < self.order.total
+
+    @partial.expression
+    def partial(cls):
+        statement = cls.amount < select([Order.total]).\
+                                    where(Order.id == cls.order_id)
+        return statement.label("partial-return")
 
     def __repr__(self):
         return f"<Return for='{self.reference}'>"
