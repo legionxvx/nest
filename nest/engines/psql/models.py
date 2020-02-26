@@ -24,6 +24,8 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
 
+PRICE = DECIMAL(10, 2)
+
 Base = declarative_base()
 
 class OrderProductAssociation(Base):
@@ -80,8 +82,16 @@ class User(Base):
     last               = Column(Text, nullable=False)
     country_code       = Column(Text, nullable=False, default="US")
     language_code      = Column(Text, nullable=False, default="en")
-    created            = Column(DateTime, nullable=False, default=datetime.utcnow())
-    last_token_request = Column(DateTime, nullable=False, default=datetime.utcfromtimestamp(0))
+    created            = Column(
+                            DateTime, 
+                            nullable=False, 
+                            default=datetime.utcnow()
+                        )
+    last_token_request = Column(
+                            DateTime, 
+                            nullable=False, 
+                            default=datetime.utcfromtimestamp(0)
+                        )
     subscribed         = Column(Boolean, nullable=False, default=False)
 
     orders = relationship(
@@ -111,7 +121,12 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
-                        where(or_(Order.returned == None, not_(Order.returned))).\
+                        where(
+                            or_(
+                                Order.returned == None, 
+                                not_(Order.returned)
+                            )
+                        ).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
@@ -139,9 +154,16 @@ class User(Base):
     def owns_any_paid(cls):
         statement = select([True]).\
                         where(Order.user_id == cls.id).\
-                        where(or_(Order.returned == None, not_(Order.returned))).\
+                        where(
+                            or_(
+                                Order.returned == None, 
+                                not_(Order.returned)
+                            )
+                        ).\
                         where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
+                        where(
+                            Product.id == OrderProductAssociation.product_id
+                        ).\
                         where(Product.price > 0)
         return statement.label("any-paid")
 
@@ -160,7 +182,12 @@ class User(Base):
     def owns_any_in_set(cls, value):
         statement = select([True]).\
                     where(Order.user_id == cls.id).\
-                    where(or_(Order.returned == None, not_(Order.returned))).\
+                    where(
+                        or_(
+                            Order.returned == None, 
+                            not_(Order.returned)
+                        )
+                    ).\
                     where(Order.id == OrderProductAssociation.order_id).\
                     where(Product.id == OrderProductAssociation.product_id).\
                     where(and_(Product.set == value, not_(Product.demo)))
@@ -181,10 +208,23 @@ class User(Base):
     def owns_current_in_set(cls, value):
         statement = select([True]).\
                         where(Order.user_id == cls.id).\
-                        where(or_(Order.returned == None, not_(Order.returned))).\
+                        where(
+                            or_(
+                                Order.returned == None, 
+                                not_(Order.returned)
+                            )
+                        ).\
                         where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == value, Product.current, not_(Product.demo)))
+                        where(
+                            Product.id == OrderProductAssociation.product_id
+                        ).\
+                        where(
+                            and_(
+                                Product.set == value, 
+                                Product.current, 
+                                not_(Product.demo)
+                            )
+                        )
         return statement.label(f"any-current-{value}")
 
     @hybrid_method
@@ -203,9 +243,16 @@ class User(Base):
     def highest_version_in_set(cls, value):
         statement = select([func.max(Product.version)]).\
                         where(Order.user_id == cls.id).\
-                        where(or_(Order.returned == None, not_(Order.returned))).\
+                        where(
+                            or_(
+                                Order.returned == None, 
+                                not_(Order.returned)
+                            )
+                        ).\
                         where(Order.id == OrderProductAssociation.order_id).\
-                        where(Product.id == OrderProductAssociation.product_id).\
+                        where(
+                            Product.id == OrderProductAssociation.product_id
+                        ).\
                         where(and_(Product.set == value, not_(Product.demo)))
         return statement.label(f"highest-version-of-{value}")
 
@@ -238,8 +285,8 @@ class Order(Base):
     date      = Column(DateTime, nullable=False, default=datetime.utcnow())
     live      = Column(Boolean, nullable=False, default=False)
     gift      = Column(Boolean, nullable=False, default=False)
-    total     = Column(DECIMAL(precision=10, scale=2), nullable=False, default=0)
-    discount  = Column(DECIMAL(precision=10, scale=2), nullable=False, default=0)
+    total     = Column(PRICE, nullable=False, default=0)
+    discount  = Column(PRICE, nullable=False, default=0)
     paths     = Column(ARRAY(Text, dimensions=1), default=[])
     coupons   = Column(ARRAY(Text, dimensions=1), default=[])
     name      = Column(Text, nullable=False, default="John Doe")
@@ -358,7 +405,7 @@ class Product(Base):
     id      = Column(Integer, primary_key=True)
     name    = Column(Text, unique=True, nullable=False)
     aliases = Column(ARRAY(Text, dimensions=1), nullable=False, default=[])
-    price   = Column(DECIMAL(precision=10, scale=2), nullable=False, default=0)
+    price   = Column(PRICE, nullable=False, default=0)
     set     = Column(Text, nullable=False, default="")
     version = Column(Integer, nullable=False, default=1)
     signer  = Column(Text, nullable=False, default="")

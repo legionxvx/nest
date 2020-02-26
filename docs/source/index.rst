@@ -16,7 +16,6 @@ Welcome to Nest's documentation!
 .. automodule:: nest.engines.psql.models
    :members:
 
-
 Indices and tables
 ==================
 
