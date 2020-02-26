@@ -202,3 +202,88 @@ def test_user_hybrid_meth_owns_any_in_set(session):
     query = session.query(User).filter(User.owns_any_in_set(set_name))
     assert(user.owns_any_in_set(set_name))
     assert(user in query.all())
+
+def test_user_hybrid_meth_owns_current_in_set(session):
+    user = User(
+        email=f"{random_str()}@{random_str()}.com",
+        first=random_str(),
+        last=random_str()
+    )
+
+    set_name = random_str()
+    product = Product(name=random_str(), set=set_name, current=False)
+
+    order = Order(reference=random_str())
+    order.user = user
+    order.products.append(product)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(User).filter(User.owns_current_in_set(set_name))
+    assert(not(user.owns_current_in_set(set_name)))
+    assert(user not in query.all())
+
+    product = Product(name=random_str(), set=set_name, current=True)
+
+    order = Order(reference=random_str())
+    order.user = user
+    order.products.append(product)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(User).filter(User.owns_current_in_set(set_name))
+    assert(user.owns_current_in_set(set_name))
+    assert(user in query.all())
+
+def test_user_hybrid_meth_highest_version_in_set(session):
+    user = User(
+        email=f"{random_str()}@{random_str()}.com",
+        first=random_str(),
+        last=random_str()
+    )
+
+    set_name = random_str()
+    product = Product(name=random_str(), set=set_name, version=1, current=False)
+
+    order = Order(reference=random_str(), total=10)
+    order.user = user
+    order.products.append(product)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(User).filter(
+        User.highest_version_in_set(set_name) == 1
+    )
+    p = query.all()
+    assert(user.highest_version_in_set(set_name) == 1)
+    assert(user in query.all())
+
+    product = Product(name=random_str(), set=set_name, version=2, current=True)
+
+    order = Order(reference=random_str(), total=10)
+    order.user = user
+    order.products.append(product)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(User).filter(
+        User.highest_version_in_set(set_name) == 2
+    )
+    assert(user.highest_version_in_set(set_name) == 2)
+    assert(user in query.all())
+
+    ret = Return(reference="FOO", amount=10)
+    ret.order = order
+
+    session.add(ret)
+    session.commit()
+
+    query = session.query(User).filter(
+        User.highest_version_in_set(set_name) == 1
+    )
+    assert(user.highest_version_in_set(set_name) == 1)
+    assert(user in query.all())
