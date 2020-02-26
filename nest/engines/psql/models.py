@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     Text,
     and_,
+    or_,
     distinct,
     func,
     not_,
@@ -138,6 +139,7 @@ class User(Base):
     def owns_any_paid(cls):
         statement = select([True]).\
                         where(Order.user_id == cls.id).\
+                        where(or_(Order.returned == None, not_(Order.returned))).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
                         where(Product.price > 0)
@@ -158,6 +160,7 @@ class User(Base):
     def owns_any_in_set(cls, value):
         statement = select([True]).\
                     where(Order.user_id == cls.id).\
+                    where(or_(Order.returned == None, not_(Order.returned))).\
                     where(Order.id == OrderProductAssociation.order_id).\
                     where(Product.id == OrderProductAssociation.product_id).\
                     where(and_(Product.set == value, not_(Product.demo)))
@@ -178,9 +181,10 @@ class User(Base):
     def owns_current_in_set(cls, value):
         statement = select([True]).\
                         where(Order.user_id == cls.id).\
+                        where(or_(Order.returned == None, not_(Order.returned))).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == set, Product.current, not_(Product.demo)))
+                        where(and_(Product.set == value, Product.current, not_(Product.demo)))
         return statement.label(f"any-current-{value}")
 
     @hybrid_method
@@ -199,9 +203,10 @@ class User(Base):
     def highest_version_in_set(cls, value):
         statement = select([func.max(Product.version)]).\
                         where(Order.user_id == cls.id).\
+                        where(or_(Order.returned == None, not_(Order.returned))).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id).\
-                        where(and_(Product.set == value, not(Product.demo)))
+                        where(and_(Product.set == value, not_(Product.demo)))
         return statement.label(f"highest-version-of-{value}")
 
 class Order(Base):
