@@ -148,7 +148,7 @@ def test_order_returning(session):
     assert(ret.partial)
     assert(ret in query.all())
 
-def test_hybrid_property_user_products(session):
+def test_user_hybrid_property_products(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
         first=random_str(),
@@ -182,7 +182,7 @@ def test_hybrid_property_user_products(session):
     assert(product in user.products)
     assert(user in query.all())
 
-def test_hybrid_meth_owns_any_in_set(session):
+def test_user_hybrid_meth_owns_any_in_set(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
         first=random_str(),
