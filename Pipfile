@@ -8,15 +8,14 @@ pytest = "*"
 pylint = "*"
 sphinx = "*"
 testing-postgresql = "*"
+alembic = "*"
 
 [packages]
 sqlalchemy = "*"
 psycopg2-binary = "*"
 redlock = "*"
-alembic = "*"
 requests = "*"
 colorlog = "*"
-redis = "*"
 
 [requires]
 python_version = "3.7"
