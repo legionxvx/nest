@@ -10,7 +10,7 @@ from testing.postgresql import Postgresql
 from nest.config import Config
 from nest.engines import PostgreSQLEngine
 from nest.engines.psql.engine import SelfDestructingSession
-from nest.engines.psql.models import Base, User, Order, Product, Return
+from nest.engines.psql.models import Base, Order, Product, Return, User
 from nest.logging import Logger
 
 
@@ -26,6 +26,12 @@ def random_str(length=16, safe=True):
 def engine():
     with Postgresql() as psql:
         yield PostgreSQLEngine(url=psql.url())
+
+@pytest.fixture()
+def session(engine):
+    session = engine.session()
+    yield session
+    session.close()
 
 def test_engine_basic(engine):
     assert(isinstance(engine.dialect, psycopg2.dialect))
@@ -106,7 +112,93 @@ def test_session_checkout(engine):
     session = engine.scoped_session(self_destruct=False)
     assert(isinstance(session, Session))
 
-def test_engine_execute(engine):
-    for row in engine.execute("SELECT current_timestamp"):
-        for date in row:
-            assert(isinstance(date, datetime))
+def test_order_returning(session):
+    order = Order(reference=random_str(), total=999)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(Order).filter(Order.returned)
+    assert(not(order.returned))
+    assert(order not in query.all())
+
+    ret = Return(reference=random_str(), amount=order.total)
+    ret.order = order
+
+    session.add(ret)
+    session.commit()
+
+    query = session.query(Order).filter(Order.returned)
+    assert(order.returned)
+    assert(order in query.all())
+
+    query = session.query(Return).filter(Return.partial == False)
+    assert(not(ret.partial))
+    assert(ret in query.all())
+
+    ret.amount = order.total/2
+    session.add(ret)
+    session.commit()
+
+    query = session.query(Order).filter(Order.returned)
+    assert(not(order.returned))
+    assert(order not in query.all())
+
+    query = session.query(Return).filter(Return.partial == True)
+    assert(ret.partial)
+    assert(ret in query.all())
+
+def test_hybrid_property_user_products(session):
+    user = User(
+        email=f"{random_str()}@{random_str()}.com",
+        first=random_str(),
+        last=random_str()
+    )
+
+    product = Product(name=random_str())
+    order = Order(reference=random_str(), total=999)
+    order.user = user
+    order.products.append(product)
+    assert(product in user.products)
+
+    ret = Return(reference=random_str(), amount=order.total/2)
+    ret.order = order
+
+    assert(product in user.products)
+    ret.amount = order.total
+
+    session.add(ret)
+    session.commit()
+    
+    query = session.query(User).filter(User.products.contains([product.name]))
+    assert(product not in user.products)
+    assert(user not in query.all())
+
+    ret.amount = order.total/2
+    session.add(ret)
+    session.commit()
+
+    query = session.query(User).filter(User.products.contains([product.name]))
+    assert(product in user.products)
+    assert(user in query.all())
+
+def test_hybrid_meth_owns_any_in_set(session):
+    user = User(
+        email=f"{random_str()}@{random_str()}.com",
+        first=random_str(),
+        last=random_str()
+    )
+
+    set_name = random_str()
+    product = Product(name=random_str(), set=set_name)
+
+    order = Order(reference=random_str())
+    order.user = user
+    order.products.append(product)
+
+    session.add(order)
+    session.commit()
+
+    query = session.query(User).filter(User.owns_any_in_set(set_name))
+    assert(user.owns_any_in_set(set_name))
+    assert(user in query.all())
