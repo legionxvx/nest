@@ -111,7 +111,7 @@ class User(Base):
         _xpr = array_agg(distinct(Product.name))
         statement = select([_xpr]).\
                         where(Order.user_id == cls.id).\
-                        where(not_(Order.returned)).\
+                        where(or_(Order.returned == None, not_(Order.returned))).\
                         where(Order.id == OrderProductAssociation.order_id).\
                         where(Product.id == OrderProductAssociation.product_id)
         return statement.label('products')
