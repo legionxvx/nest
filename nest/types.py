@@ -1,7 +1,7 @@
 class Singleton(type):
-    """
-    docstring here
-        :param type: Python type
+    """A metaclass that allows a constructed object to be made only 
+    *once*. Each subsequent construction call will return the original 
+    instance.
     """
     def __init__(cls, name, bases, attrs, **kwargs):
         super().__init__(name, bases, attrs)
