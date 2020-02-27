@@ -9,38 +9,33 @@ from requests import HTTPError, Session
 
 class FastSpring(Session):
     """docstring here
-
-        :param Session: 
     """
     def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
-        self.logger = logging.getLogger("nest")
         self.prefix = prefix or "https://api.fastspring.com"
 
         super().__init__(**kwargs)
 
         self.hooks = hooks
         self.auth = auth or (
-            environ.get("FS_AUTH_USER", b""), 
-            environ.get("FS_AUTH_PASS", b"")
+            environ.get("FS_AUTH_USER", ""), 
+            environ.get("FS_AUTH_PASS", "")
         )
         self.auth = (self.auth[0], self.auth[1])
 
         if close:
             self.headers.update({"Connection":"close"})
 
-        self.connected = self.get("orders").ok
+        self.logger = logging.getLogger("nest")
 
-    def request(self, method, url, *args, **kwargs):
-        _url = urljoin(self.prefix, url)
-        return super().request(method, _url, *args, **kwargs)
+    def request(self, method, *args, **kwargs):
+        url = urljoin(self.prefix, "/".join(args))
+        return super().request(method, url, **kwargs)
 
     def get_products_list(self):
         return self.get("products")
 
     def get_products(self, products):
-        joined_ids = ",".join(products)
-        url = urljoin("products/", joined_ids)
-        return self.get(url)
+        return self.get("products", ",".join(products))
 
     def get_events(self, _type, **kwargs):
         url = urljoin("events/", _type)
@@ -73,7 +68,6 @@ class FastSpring(Session):
                              f"{error}")
                 yield []
             yield data.get("events")
-
 
     def get_orders(self, **kwargs):
         res = self.get("orders", params=kwargs)
@@ -145,7 +139,7 @@ class FastSpring(Session):
             if not(with_bundles):
                 blacklist.append("bundle")
 
-            #skip if blacklisted
+            # Skip if blacklisted
             blacklisted = False
             for offer in offers:
                 if offer.get("type") in blacklist:
@@ -154,7 +148,7 @@ class FastSpring(Session):
             if blacklisted:
                 continue
 
-            #this must be the child of *some* product
+            # This must be the child of some product
             parent = info.get("parent")
             child = info.get("product")
             if parent and child:

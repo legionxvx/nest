@@ -8,8 +8,6 @@ from nest.engines.psql import models
 
 class EventParser(object):
     """docstring here
-    
-        :param object: 
     """
     def __init__(self, segment=[], type_hint=None):
         self.segment = segment
@@ -33,8 +31,6 @@ class EventParser(object):
 
 class WebhookEvent(object):
     """docstring here
-
-        :param object: 
     """
     def __init__(self, data={}, type_hint=None):
         self.id = data.get("id", "")
@@ -49,6 +45,12 @@ class WebhookEvent(object):
                 self.created = datetime.utcfromtimestamp(self.created // 1000)
 
         self.data = data.get("data", {})
+
+        if not(self.type == type_hint):
+            self.logger.warning(
+                f"Event type is '{self.type}', but was given type hint of: "
+                f"'{type_hint}'; fallout from disparate types likely!"
+            )
 
     @abstractproperty
     def model(self):
@@ -75,16 +77,10 @@ class WebhookEvent(object):
 
 class Order(WebhookEvent):
     """docstring here
-
-        :param WebhookEvent: 
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="order.completed")
         self.session = session
-
-        if not(self.type == "order.completed"):
-            logger.warning(f"Constructed Order event is type: {self.type}, "
-                           f"but should be type: 'order.completed'")
 
     @property
     def customer(self):
@@ -113,7 +109,7 @@ class Order(WebhookEvent):
     @property
     def gift(self):
         if len(self.recipients) > 1:
-            logger.error("Cannot determine gift with multiple recipients.")
+            self.logger.error("Cannot determine gift with multiple recipients.")
         
         if len(self.recipients) == 1:
             if self.session:
@@ -150,11 +146,11 @@ class Order(WebhookEvent):
 
     @property
     def total(self):
-        return self.data.get("totalInPayoutCurrency", float(0))
+        return self.data.get("totalInPayoutCurrency", 0)
 
     @property
     def discount(self):
-        return self.data.get("discountInPayoutCurrency", float(0))
+        return self.data.get("discountInPayoutCurrency", 0)
     
     @property
     def model(self):
@@ -183,16 +179,10 @@ class Order(WebhookEvent):
 
 class Return(WebhookEvent):
     """docstring here
-
-        :param WebhookEvent: 
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="return.created")
         self.session = session
-
-        if not(self.type == "return.created"):
-            logger.warning(f"Constructed Return event is type: {self.type}, "
-                           f"but should be type: 'return.created'")
 
     @property
     def order(self):
@@ -206,44 +196,20 @@ class Return(WebhookEvent):
         return original
 
     @property
-    def partial(self):
-        refund_total = self.data.get("totalReturnInPayoutCurrency", float(0))
-        original_total = 0
-
-        if self.session:
-            original_total = self.order.total
-        else:
-            original_total = self.order.get("totalInPayoutCurrency", float(0))
-        
-        return refund_total != original_total
-
-    @property
     def model(self):
-        reference = ""
-        if self.session:
-            reference = self.order.reference
-        else:
-            reference = self.order.get("reference", "")
-
         args = {
-            "reference": reference,
-            "partial": self.partial
+            "reference": self.data.get("reference"),
+            "amount": self.data.get("totalReturnInPayoutCurrency", 0)
         }
         return models.Return(**args)
 
 # @ToDo -> Condense these into their own `SubscriptionEvent` sub-class
 class SubscriptionActivated(WebhookEvent):
     """docstring here
-
-        :param WebhookEvent: 
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.activated")
         self.session = session
-
-        if not(self.type == "subscription.activated"):
-            logger.warning(f"Constructed Return event is type: {self.type}, "
-                           f"but should be type: 'subscription.activated'")
 
     @property
     def user(self):
@@ -269,15 +235,10 @@ class SubscriptionActivated(WebhookEvent):
 
 class SubscriptionDeactivated(WebhookEvent):
     """docstring here
-        :param WebhookEvent: 
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.deactivated")
         self.session = session
-
-        if not(self.type == "subscription.deactivated"):
-            logger.warning(f"Constructed Return event is type: {self.type}, "
-                           f"but should be type: 'subscription.deactivated'")
     
     @property
     def user(self):
