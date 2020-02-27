@@ -9,6 +9,7 @@ pylint = "*"
 sphinx = "*"
 testing-postgresql = "*"
 alembic = "*"
+pytest-redis = "*"
 
 [packages]
 sqlalchemy = "*"
