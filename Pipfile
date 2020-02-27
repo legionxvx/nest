@@ -10,6 +10,7 @@ sphinx = "*"
 testing-postgresql = "*"
 alembic = "*"
 pytest-redis = "*"
+requests-mock = "*"
 
 [packages]
 sqlalchemy = "*"
