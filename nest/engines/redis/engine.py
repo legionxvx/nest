@@ -9,9 +9,6 @@ from nest.types import Singleton
 
 class RedisEngine(Redis, metaclass=Singleton):
     """docstring here
-    
-        :param Redis: 
-        :param metaclass=Singleton: 
     """
     DEFAULT_CONNECTION_DETAILS = {
         "host": "localhost",
