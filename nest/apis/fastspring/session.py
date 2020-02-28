@@ -10,16 +10,19 @@ from requests import HTTPError, Session
 class FastSpring(Session):
     """docstring here
     """
-    def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
-        self.prefix = prefix or "https://api.fastspring.com"
-        super().__init__(**kwargs)
+    def __init__(self, prefix=None, auth=None, hooks={}):
+        super().__init__()
+        self.logger = logging.getLogger("nest")
         self.hooks = hooks
         self.auth = auth or (
             environ.get("FS_AUTH_USER", ""), 
             environ.get("FS_AUTH_PASS", "")
         )
         self.auth = (self.auth[0], self.auth[1])
-        self.logger = logging.getLogger("nest")
+
+    @property
+    def prefix(self):
+        return "https://api.fastspring.com"
 
     def request(self, method, url, *args, **kwargs):
         url = urljoin(self.prefix, "/".join([url]))
@@ -27,12 +30,7 @@ class FastSpring(Session):
 
     def get_products(self, *args, **kwargs):
         plist = ",".join(args)
-
-        res = self.request(
-            "GET", 
-            f"products/{plist}", 
-            **kwargs
-        )
+        res = self.request("GET", f"products/{plist}", **kwargs)
 
         try:
             res.raise_for_status()
@@ -117,11 +115,15 @@ class FastSpring(Session):
                 res.raise_for_status()
                 data = res.json()
             except (HTTPError) as error:
-                self.logger.error(f"Could not get orders on page {page}: {error}")
+                self.logger.error(
+                    f"Could not get orders on page {page}: {error}"
+                )
                 yield []
             except (JSONDecodeError) as error:
-                self.logger.error(f"Could not decode response JSON on page {page}: "
-                             f"{error}")
+                self.logger.error(
+                    f"Could not decode response JSON on page {page}: "
+                    f"{error}"
+                )
                 yield []
             yield data.get("orders")
 

@@ -82,29 +82,52 @@ class Order(WebhookEvent):
         super().__init__(data, type_hint="order.completed")
         self.session = session
 
+        self._customer = None
+        self._recipients = None
+        self._products = None
+        self._model = None
+
     @property
     def customer(self):
-        customer = self.data.get("customer", {})
-        if self.session:
-            email = customer.get("email", "")
-            query = self.session.query(models.User).filter_by(email=email)
-            customer = query.first()
-        return customer
+        if not(self._customer):
+            customer = self.data.get("customer", {})
+            user = None
+            if self.session:
+                email = customer.get("email", "")
+                query = self.session.query(models.User).filter_by(email=email)
+                
+                user = query.first()
+                if not(user):
+                    user = models.User(
+                        email=email, 
+                        first=customer.get("first", "John"),
+                        last=customer.get("last", "Doe"),
+                    )
+            self._customer = user or customer
+        return self._customer
     
     @property
     def recipients(self):
-        recipients = self.data.get("recipients", []).copy()
-        for i, recipient in enumerate(recipients):
-            info = recipient.get("recipient", {})
-            email = info.get("email", "")
-            if self.session:
-                query = self.session.query(models.User).filter_by(email=email)
-                user = query.first()
-                if user:
-                    recipients[i] = user
-            else:
-                recipients[i] = info
-        return recipients
+        if not(self._recipients):
+            recipients = self.data.get("recipients", []).copy()
+            for i, recipient in enumerate(recipients):
+                info = recipient.get("recipient", {})
+                email = info.get("email", "")
+                if self.session:
+                    query = self.session.query(models.User).filter_by(email=email)
+                    user = query.first()
+                    if user:
+                        recipients[i] = user
+                    else:
+                        recipients[i] = models.User(
+                            email=email, 
+                            first=info.get("first", "John"),
+                            last=info.get("last", "Doe"),
+                        )
+                else:
+                    recipients[i] = info
+            self._recipients = recipients
+        return self._recipients
     
     @property
     def gift(self):
@@ -113,7 +136,7 @@ class Order(WebhookEvent):
         
         if len(self.recipients) == 1:
             if self.session:
-                if self.customer is not self.recipients[0]:
+                if self.customer == self.recipients[0]:
                     return True
             else:
                 recipient = self.recipients[0].copy()
@@ -125,15 +148,17 @@ class Order(WebhookEvent):
 
     @property
     def products(self):
-        products = []
-        for item in self.data.get("items", []):
-            products.append(item.get("product", ""))
-        
-        if self.session:
-            op = models.Product.aliases.overlap(products)
-            query = self.session.query(models.Product).filter(op)
-            products = query.all()
-        return products
+        if not(self._products):
+            products = []
+            for item in self.data.get("items", []):
+                products.append(item.get("product", ""))
+            
+            if self.session:
+                op = models.Product.aliases.overlap(products)
+                query = self.session.query(models.Product).filter(op)
+                products = query.all()
+            self._products = products
+        return self._products
 
     @property
     def paths(self):
@@ -154,23 +179,24 @@ class Order(WebhookEvent):
     
     @property
     def model(self):
-        args = {
-            "reference": self.data.get("reference"),
-            "created": self.created,
-            "live": self.live,
-            "gift": self.gift,
-            "total": self.total,
-            "discount": self.discount,
-            "paths": self.paths,
-            "coupons": self.data.get("coupons", [])
-        }
+        if not(self._model):
+            args = {
+                "reference": self.data.get("reference"),
+                "created": self.created,
+                "live": self.live,
+                "gift": self.gift,
+                "total": self.total,
+                "discount": self.discount,
+                "paths": self.paths,
+                "coupons": self.data.get("coupons", [])
+            }
 
-        if self.session:
-            # @ToDo -> Handle multiple gift recipients
-            args["products"] = self.products
-            args["user"] = self.recipients[0]
-
-        return models.Order(**args)
+            if self.session:
+                # @ToDo -> Handle multiple gift recipients
+                args["products"] = self.products
+                args["user"] = self.recipients[0]
+            self._model = models.Order(**args)
+        return self._model
 
     def __repr__(self):
         return (f"<Event (Order) id='{self.id}' "
