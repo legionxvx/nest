@@ -12,34 +12,43 @@ class FastSpring(Session):
     """
     def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
         self.prefix = prefix or "https://api.fastspring.com"
-
         super().__init__(**kwargs)
-
         self.hooks = hooks
         self.auth = auth or (
             environ.get("FS_AUTH_USER", ""), 
             environ.get("FS_AUTH_PASS", "")
         )
         self.auth = (self.auth[0], self.auth[1])
-
-        if close:
-            self.headers.update({"Connection":"close"})
-
         self.logger = logging.getLogger("nest")
 
-    def request(self, method, *args, **kwargs):
-        url = urljoin(self.prefix, "/".join(args))
-        return super().request(method, url, **kwargs)
+    def request(self, method, url, *args, **kwargs):
+        url = urljoin(self.prefix, "/".join([url]))
+        return super().request(method, url, *args, **kwargs)
 
-    def get_products_list(self):
-        return self.get("products")
+    def get_products(self, *args, **kwargs):
+        plist = ",".join(args)
 
-    def get_products(self, products):
-        return self.get("products", ",".join(products))
+        res = self.request(
+            "GET", 
+            f"products/{plist}", 
+            **kwargs
+        )
 
-    def get_events(self, _type, **kwargs):
-        url = urljoin("events/", _type)
-        res = self.get(url, params=kwargs)
+        try:
+            res.raise_for_status()
+            data = res.json()
+        except (HTTPError) as error:
+            self.logger.error(f"Could not get orders: {error}")
+            return []
+        except (JSONDecodeError) as error:
+            self.logger.error(f"Could not decode response JSON: {error}")
+            return []
+        
+        for product in data.get("products", []):
+            yield product
+
+    def get_events(self, type, **kwargs):
+        res = self.get(f"events/{type}", **kwargs)
 
         try:
             res.raise_for_status()
@@ -53,24 +62,38 @@ class FastSpring(Session):
 
         yield data.get("events", [])
 
-        while data.get("nextPage"):
-            page = data.get("nextPage")
-            url = urljoin("events/", _type)
-            res = self.get(url, params={**kwargs, "page":page})
+        # Drop any unnecessary params
+        kwargs["params"] = kwargs.get("params", {})
+        kwargs["params"].pop("days", None)
+
+        while data.get("more"):
+            # Change "begin" param to the last order timestamp
+            events = data.get("events", [{}])
+            timestamp = events[-1].get("created")
+            if not(timestamp):
+                break
+            
+            kwargs["params"].update(begin=timestamp+1)
+            res = self.get(f"events/{type}", **kwargs)
+
             try:
                 res.raise_for_status()
                 data = res.json()
             except (HTTPError) as error:
-                self.logger.error(f"Could not get orders on page {page}: {error}")
+                self.logger.error(
+                    f"Could not get orders from timestamp {timestamp}: {error}"
+                )
                 yield []
             except (JSONDecodeError) as error:
-                self.logger.error(f"Could not decode response JSON on page {page}: "
-                             f"{error}")
+                self.logger.error(
+                    f"Could not decode JSON from response ({timestamp}) "
+                    f"{error}"
+                )
                 yield []
             yield data.get("events")
 
-    def get_orders(self, **kwargs):
-        res = self.get("orders", params=kwargs)
+    def get_orders(self, *args, **kwargs):
+        res = self.get("orders", *args, **kwargs)
 
         try:
             res.raise_for_status()
@@ -83,10 +106,13 @@ class FastSpring(Session):
             return []
 
         yield data.get("orders", [])
+            
+        kwargs["params"] = kwargs.get("params", {})
 
         while data.get("nextPage"):
             page = data.get("nextPage")
-            res = self.get("orders", params={**kwargs, "page":page})
+            kwargs["params"].update(page=page)
+            res = self.get("orders", **kwargs)
             try:
                 res.raise_for_status()
                 data = res.json()
@@ -99,56 +125,19 @@ class FastSpring(Session):
                 yield []
             yield data.get("orders")
 
-    def get_parents(self, with_bundles=False):
-        products = []
-        res = self.get_products_list()
-
-        try:
-            res.raise_for_status()
-            json_data = res.json()
-            products.extend(json_data.get("products", []))
-        except (HTTPError) as error:
-            self.logger.error(f"Could not get products list: {error}")
-            return {}
-        except (JSONDecodeError) as error:
-            self.logger.error(f"Could not decode response JSON: {error}")
-            return {}
+    def get_parents(self, *args, blacklist=["bundle"], **kwargs):
+        products = [name for name in self.get_products(*args, **kwargs)]
 
         if len(products) == 0:
             return {}
 
-        res = self.get_products(products)
-
-        data = []
-        try:
-            res.raise_for_status()
-            json_data = res.json()
-            data.extend(json_data.get("products", []))
-        except (HTTPError) as error:
-            self.logger.error(f"Could not get product data: {error}")
-            return {}
-        except (JSONDecodeError) as error:
-            self.logger.error(f"Could not decode response JSON: {error}")
-            return {}
-
         parent_information = defaultdict(list)
-        for info in data:
+        for info in self.get_products(*products):
             offers = info.get("offers", [])
 
-            blacklist = []
-            if not(with_bundles):
-                blacklist.append("bundle")
-
-            # Skip if blacklisted
-            blacklisted = False
-            for offer in offers:
-                if offer.get("type") in blacklist:
-                    blacklisted = True
-
-            if blacklisted:
+            if any([offer.get("type") in blacklist for offer in offers]):
                 continue
 
-            # This must be the child of some product
             parent = info.get("parent")
             child = info.get("product")
             if parent and child:
@@ -156,12 +145,10 @@ class FastSpring(Session):
 
         return parent_information
 
-    def mark_event_processed(self, _id=""):
-        url = urljoin("events/", _id)
-        payload = {"processed":True}
-        res = self.post(url, params=payload)
+    def update_event(self, id, **kwargs):
+        res = self.post(f"events/{id}", **kwargs)
         try:
             res.raise_for_status()
         except (HTTPError) as error:
-            self.logger.error(f"Could not mark event processed: {error}")
+            self.logger.error(f"Could not update event: {error}")
         return res
