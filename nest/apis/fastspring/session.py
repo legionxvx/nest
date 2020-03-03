@@ -1,41 +1,12 @@
 import logging
 from collections import defaultdict
-from functools import wraps
-from json import JSONDecodeError
 from os import environ
 from urllib.parse import urljoin
 
-from requests import HTTPError, Session
+from requests import Session
 
+from nest.apis.utils import protect
 
-def protect(default=None):
-    """This decorator can be used on any method the requests some
-    resource and expects:
-
-    A) The response status to be non 4XX and non 5XX (aka, response OK)
-    B) The response content to be parsable JSON
-
-    In the event the method throws these errors uncaught, it will
-    catch these errors (HTTPError and JSONDecodeError) and return
-    the ``default`` value.
-
-        :param default=None: Default value to return if exceptions are
-        raised.
-    """
-    def wrapper(fn, *args, **kwargs):
-        @wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            rv = None
-            try:
-                rv = fn(self, *args, **kwargs)
-            except (HTTPError) as error:
-                url = {error.response.url}
-                self.logger.error(f"Could not get {url}: {error}")
-            except (JSONDecodeError) as error:
-                self.logger.error(f"Could not decode response JSON: {error}")
-            return rv or default
-        return wrapped
-    return wrapper
 
 class FastSpring(Session):
     """A custom ``Session`` to interact with FastSpring's API.
@@ -59,7 +30,7 @@ class FastSpring(Session):
         return "https://api.fastspring.com"
 
     def request(self, method, suffix, *args, **kwargs):
-        """Just like a noram ``Session.request()`` except that the
+        """Just like a normal ``Session.request()`` except that the 
         ``url`` is constructed using ``prefix`` and ``suffix``
 
             :param method: HTTP Verb
