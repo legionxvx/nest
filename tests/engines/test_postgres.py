@@ -1,6 +1,6 @@
 from base64 import b64encode, urlsafe_b64encode
 from datetime import datetime
-from os import urandom
+from os import urandom, path
 
 import pytest
 from sqlalchemy.dialects.postgresql import psycopg2
@@ -13,6 +13,10 @@ from nest.engines.psql.engine import SelfDestructingSession
 from nest.engines.psql.models import Base, Order, Product, Return, User
 from nest.logging import Logger
 
+SkipIfNoPsql = pytest.mark.skipif(
+    not(path.exists("/usr/lib/postgresql/12/bin/pg_ctl")), 
+    reason="You must have PostgreSQL 12 in order to run these tests."
+)
 
 def random_str(length=16, safe=True):
     rv, bits = b"", urandom(length)
@@ -36,6 +40,7 @@ def session(engine):
     yield session
     session.close()
 
+@SkipIfNoPsql
 def test_engine_basic(engine):
     assert(isinstance(engine.dialect, psycopg2.dialect))
 
@@ -47,6 +52,7 @@ def test_engine_basic(engine):
         for proxy in engine.execute(f"SELECT * FROM {table.fullname}"):
             pass
 
+@SkipIfNoPsql
 @pytest.mark.parametrize("model, ctor_args", [
     (User, {
         "email": f"{random_str()}@{random_str()}.com",
@@ -84,6 +90,7 @@ def test_models(session, model, ctor_args):
                 if default:
                     assert(value == default.arg)
 
+@SkipIfNoPsql
 def test_engine_callback_registration(engine):
     counter = 0
     def callback(*args, **kwargs):
@@ -100,6 +107,7 @@ def test_engine_callback_registration(engine):
 
     assert counter == 1
 
+@SkipIfNoPsql
 def test_session_checkout(engine):
     session = engine.session()
     assert(isinstance(session, Session))
@@ -110,6 +118,7 @@ def test_session_checkout(engine):
     session = engine.scoped_session(self_destruct=False)
     assert(isinstance(session, Session))
 
+@SkipIfNoPsql
 def test_order_returning(session):
     order = Order(reference=random_str(), total=999)
 
@@ -146,6 +155,7 @@ def test_order_returning(session):
     assert(ret.partial)
     assert(ret in query.all())
 
+@SkipIfNoPsql
 def test_user_hybrid_property_products(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
@@ -180,6 +190,7 @@ def test_user_hybrid_property_products(session):
     assert(product in user.products)
     assert(user in query.all())
 
+@SkipIfNoPsql
 def test_user_hybrid_meth_owns_any_in_set(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
@@ -201,6 +212,7 @@ def test_user_hybrid_meth_owns_any_in_set(session):
     assert(user.owns_any_in_set(set_name))
     assert(user in query.all())
 
+@SkipIfNoPsql
 def test_user_hybrid_meth_owns_current_in_set(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
@@ -235,6 +247,7 @@ def test_user_hybrid_meth_owns_current_in_set(session):
     assert(user.owns_current_in_set(set_name))
     assert(user in query.all())
 
+@SkipIfNoPsql
 def test_user_hybrid_meth_highest_version_in_set(session):
     user = User(
         email=f"{random_str()}@{random_str()}.com",
