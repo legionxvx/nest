@@ -1,194 +1,152 @@
 import logging
-from datetime import datetime, timedelta
 from hashlib import md5
-from json import JSONDecodeError, dumps
 from os import environ
 from urllib.parse import urljoin
 
-from requests import HTTPError, Session
+from requests import Session
 
-from nest.apis.fastspring.events import Order
-from nest.engines.psql.models import User
+from nest.apis.utils import protect
 
 
 class Mailchimp(Session):
-    """docstring here
-
-        :param Session: 
+    """A custom ``Session`` to interact with Mailchimp's API.
     """
-    def __init__(self, auth=None, prefix=None, close=False, hooks={}, **kwargs):
+    def __init__(self, prefix=None, auth=None, hooks={}):
+        super().__init__()
         self.logger = logging.getLogger("nest")
-        self.prefix = prefix or "https://us14.api.mailchimp.com/3.0/"
-        self.lists = {}
-
-        super().__init__(**kwargs)
-
-        self.auth = auth or (
-            environ.get("MAILCHIMP_AUTH_USER", "foo"),
-            environ.get("MAILCHIMP_AUTH_TOKEN", "bar")
-        )
-        self.auth = (self.auth[0], self.auth[1])
         self.hooks = hooks
-
-        if close:
-            self.headers.update({'Connection':'close'})
-
-        self.get_lists()
-        self.default_list = self.lists.get(
-            environ.get("MAILCHIMP_LIST", ""), 
-            ""
+        self.auth = auth or (
+            environ.get("MAILCHIMP_AUTH_USER", ""),
+            environ.get("MAILCHIMP_AUTH_TOKEN", "")
         )
-        self.connected = self.get("/").ok
+        self._lists = None
+        self.__default_list = None
 
-    @classmethod
-    def hash_email(cls, email=""):
-        return md5(email.encode()).hexdigest()
-
-    def request(self, method, url, endpoint=None, list_id=None, default=True,
-                *args, **kwargs):
-        if default:
-            if not(self.default_list):
-                self.logger.error("Trying to request to Mailchimp "
-                                        "with defaults, except there is no "
-                                        "default list!")
-            endpoint = endpoint or "members"
-            list_id = list_id or self.default_list
-            parts = ["lists", list_id, endpoint, url]
-            url = urljoin(self.prefix or "", "/".join(parts))
-        else:
-            url = urljoin(self.prefix, url)
-        return super().request(method, url, *args, **kwargs)
-
-    def get_lists(self):
-        res = self.get("lists", default=False)
-
-        if res.ok:
-            data = res.json()
-            lists = data.get("lists", [])
-            for list in lists:
-                if list.get("name") and list.get("id"):
-                    self.lists.update({list.get("name"): list.get("id")})
-        return self.lists
-
-    def get_members(self, list_id=None, **kwargs):
-        offset = 0
-        res = self.get("", list_id=list_id, params=kwargs)
-
-        try:
+    @property
+    def lists(self):
+        """A dict of Mailchimp 'lists' to their internal ids
+        """   
+        if not(self._lists):
+            self._lists = {}
+            url = urljoin(self.prefix, "lists")
+            res = super().request("GET", url)
             res.raise_for_status()
             data = res.json()
-        except (HTTPError) as error:
-            self.logger.error(f"Could not get orders: {error}")
-            return []
-        except (JSONDecodeError):
-            self.logger.error(f"Could not decode response JSON: {error}")
-            return []
+            
+            for info in data.get("lists", []):
+                name = info.get("name")
+                list_id = info.get("id")
+                if info.get("name") and info.get("id"):
+                    self._lists.update({name: list_id})
+        return self._lists
+
+    @property
+    def prefix(self):
+        """URL to prefix on all requests. Since this is dedicated to
+        Mailchimp, it is (currently): 
+        'https://us14.api.mailchimp.com/3.0/'.
+
+        This property is *read-only* and has no setter.
+        """
+        return "https://us14.api.mailchimp.com/3.0/"
+
+    @property
+    def default_list(self):
+        """Since most of this API usage is dedicated to maintaining 
+        and modifying one list, this property acts as a default for 
+        requests that do not specify a list id.
+        """   
+        return self.__default_list
+
+    @default_list.setter
+    def default_list(self, new):
+        self.__default_list = new
+
+    @classmethod
+    def md5(cls, message):
+        """Hash a message with md5.
+
+        Useful, because all Mailchimp "resources" are md5 hashed 
+        emails.
+
+            :param message: 
+        """   
+        if isinstance(message, bytes):
+            return md5(message).hexdigest()
+        elif isinstance(message, str):
+            return md5(message.encode()).hexdigest()
+        return md5(b"").hexdigest()
+
+    @classmethod
+    def multijoin(cls, url, *args, seperator="/"):
+        """Like URL join, except it takes a variable number of args 
+        and and a variable seperator.
+
+            :param url: 
+            :param *args: 
+            :param seperator="/": 
+        """   
+        return urljoin(url, seperator.join(args))
+
+    def request(self, method, suffix, *args, **kwargs):
+        """Just like a normal ``Session.request()`` except that the 
+        ``endpoint`` is constructed using ``prefix``, ``suffix``, 
+        and ``list`` values.
+
+        The list id for this request is extracted from kwargs. If a 
+        ``default_list`` is present, the list id will default to that 
+        list's id.
+
+            :param method: HTTP Verb
+            :param suffix: Appended to ``prefix``
+            :param *args: Passed to ``super`` request method
+            :param **kwargs: Passed to ``super`` request method
+        """
+        id = kwargs.pop(
+            "list", 
+            self.lists.get(self.default_list, "")
+        )
+        endpoint = self.multijoin(self.prefix, "lists", id, suffix)
+        return super().request(method, endpoint, *args, **kwargs)
+
+    @protect(default=[])
+    def get_members(self, *args, **kwargs):
+        """Get all members in a list.
+
+            :param *args: Passed to each ``get()`` request
+            :param **kwargs: Passed to each ``get()`` request
+        """   
+        res = self.get("members", *args, **kwargs)
+
+        res.raise_for_status()
+        data = res.json()
 
         members = data.get("members", [])
-        yield members
-
-        total = data.get("total_items")
-        offset += len(members)
+        for member in members:
+            yield member
+                
+        total = data.get("total_items", 0)
+        offset = len(members)
+        kwargs["params"] = kwargs.get("params", {}) 
         while offset < total:
-            try:
-                res = self.get("", list_id=list_id, params={**kwargs,
-                           "offset":offset})
-                res.raise_for_status()
-                data = res.json()
-            except (HTTPError) as error:
-                self.logger.error(f"Could not get orders: {error}")
-                yield []
-            except (JSONDecodeError):
-                self.logger.error(f"Could not decode response JSON: "
-                                         f"{error}")
-                yield []
-
+            kwargs["params"].update(offset=offset)
+            res = self.get("members", *args, **kwargs)
+            res.raise_for_status()
+            data = res.json()
             members = data.get("members", [])
-            yield members
+            for member in members:
+                yield member
             offset += len(members)
 
-    def get_member(self, email=None, from_user=None, list_id=None):
-        if not(email or from_user):
-            raise Exception("Must specify an email or user object to check.")
+    @protect(default={})
+    def get_member(self, email, *args, **kwargs):
+        """Get a specific member in a list by email.
 
-        if from_user:
-            if not(isinstance(from_user, User)):
-                raise TypeError(f"Cannot get member from {type(from_user)}.")
-
-        resource = self.hash_email(email or from_user.email)
-
-        return self.get(resource, list_id=list_id)
-
-    def unsubscribe_member(self, email=None, from_user=None, list_id=None):
-        if from_user:
-            if not(isinstance(from_user, User)):
-                raise TypeError(f"Cannot unsubscibe user of {type(from_user)}.")
-
-        payload = {'status': 'unsubscribed',}
-
-        resource = self.hash_email(email or from_user.email)
-
-        return self.patch(resource, data=dumps(payload), list_id=list_id)
-
-    def create_user(self, user, list_id=None):
-        if not(isinstance(user, User)):
-            raise TypeError(f"Cannot create user from {type(user)}.")
-
-        payload = {
-            'email_address': user.email,
-            'status': 'subscribed',
-            'language': user.language_code,
-            'merge_fields': {'FNAME':user.first, 'LNAME':user.last},
-            'tags': []
-        }
-
-        for product in user.products:
-            payload["tags"].append(product.name)
-
-        #remove returns
-        for order in user.orders:
-            if len(order.returns) > 0:
-                for product in order.products:
-                    try:
-                        idx = payload["tags"].index(product.name)
-                        payload["tags"].pop(idx)
-                    except:
-                        pass
-
-        if user.earliest_order_date > (datetime.utcnow() - timedelta(days=1)):
-            if not(user.owns_any_paid):
-                payload['tags'].append('drip-victim')
-
-        res = self.post("", data=dumps(payload), list_id=None)
-        if not(res.ok):
-            self.logger.error(f"Could not create user @ {list_id} - "
-                                     f"{res.content}")
-        return res
-
-    def update_user(self, user, list_id=None):
-        if not(isinstance(user, User)):
-            raise TypeError(f"Cannot user user from {type(user)}.")
-
-        payload = {
-            'language': user.language_code,
-            'merge_fields': {'FNAME':user.first, 'LNAME':user.last}
-        }
-
-        resource = self.hash_email(user.email)
-
-        owned_product_names = [product.name for product in user.products]
-
-        tags = [{'name':item.name, 'status':'active'} for item in user.products]
-        # tags.extend([{'name':item, "status":"inactive"} for item in \
-        #             get_products() if not item in owned_product_names])
-
-        if not(len(user.products) >= 1):
-            tags.extend([{'name':'No-items', 'status':'active'}])
-        else:
-            tags.extend([{'name':'No-items', 'status':'inactive'}])
-
-        patch = self.patch(resource, data=dumps(payload), list_id=list_id)
-        post  = self.post(f"{resource}/tags", data=dumps({"tags":tags}),
-                          list_id=list_id)
-
-        return (patch, post)
+            :param email: The email of the member
+            :param *args: Passed to ``get()`` request
+            :param **kwargs: Passed to ``get()`` request
+        """   
+        res = self.get(f"members/{self.md5(email)}", *args, **kwargs)
+        res.raise_for_status()
+        data = res.json()
+        return data 
