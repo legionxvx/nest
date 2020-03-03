@@ -25,7 +25,7 @@ class SelfDestructingSession(Session):
     def __del__(self):
         self.factory.remove()
 
-class PostgreSQLEngine(Engine, metaclass=Singleton):
+class PostgreSQLEngine(Engine):
     """An `Engine` connected a PostgreSQL database"""
     DEFAULT_CONNECTION_INFO = {
         "drivername": "postgresql",

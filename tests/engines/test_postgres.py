@@ -5,7 +5,7 @@ from os import urandom
 import pytest
 from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.orm import Session
-from testing.postgresql import Postgresql
+from testing.postgresql import Postgresql, skipIfNotFound
 
 from nest.config import Config
 from nest.engines import PostgreSQLEngine
@@ -22,10 +22,13 @@ def random_str(length=16, safe=True):
         rv = b64encode(bits)
     return rv.decode("utf-8")
 
-@pytest.fixture(scope="module")
-def engine():
-    with Postgresql() as psql:
-        yield PostgreSQLEngine(url=psql.url())
+@pytest.fixture()
+def engine(postgresql):
+    connection_info = {
+        "port": postgresql.info.port,
+        "database": postgresql.info.dbname
+    }
+    yield PostgreSQLEngine(connection_info=connection_info)
 
 @pytest.fixture()
 def session(engine):
@@ -53,22 +56,18 @@ def test_engine_basic(engine):
 
     (Order, {
         "reference": random_str(),
-        "user_id": 1,
     }),
 
     (Return, {
         "reference": random_str(),
         "amount": 999,
-        "order_id": 1
     }),
 
     (Product, {
         "name": random_str(),
     }),
 ])
-def test_models(engine, model, ctor_args):
-    session = engine.session()
-
+def test_models(session, model, ctor_args):
     obj = model(**ctor_args)
 
     session.add(obj)
@@ -84,7 +83,6 @@ def test_models(engine, model, ctor_args):
                 default = table.columns[key].default
                 if default:
                     assert(value == default.arg)
-    session.close()
 
 def test_engine_callback_registration(engine):
     counter = 0

@@ -3,7 +3,6 @@ from os import urandom
 from urllib.parse import urlencode, urljoin
 
 import pytest
-from testing.postgresql import Postgresql
 
 from nest.apis.fastspring import FastSpring
 from nest.apis.fastspring.events import EventParser, Order
@@ -18,10 +17,13 @@ def random_str(length=16, safe=True):
         rv = b64encode(bits)
     return rv.decode("utf-8")
 
-@pytest.fixture(scope="module")
-def engine():
-    with Postgresql() as psql:
-        yield PostgreSQLEngine(url=psql.url())
+@pytest.fixture()
+def engine(postgresql):
+    connection_info = {
+        "port": postgresql.info.port,
+        "database": postgresql.info.dbname
+    }
+    yield PostgreSQLEngine(connection_info=connection_info)
 
 @pytest.fixture()
 def database(engine):

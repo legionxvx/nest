@@ -7,10 +7,10 @@ verify_ssl = true
 pytest = "*"
 pylint = "*"
 sphinx = "*"
-testing-postgresql = "*"
 alembic = "*"
 pytest-redis = "*"
 pytest-env = "*"
+pytest-postgresql = "*"
 
 [packages]
 sqlalchemy = "*"
