@@ -9,30 +9,37 @@ from nest.engines.psql import models
 class EventParser(object):
     """docstring here
     """
-    def __init__(self, segment=[], type_hint=None):
-        self.segment = segment
+    def __init__(self, generator, session=None, type_hint=None):
+        self.generator = generator
+        self.session = session
         self.type_hint = type_hint
 
     def __iter__(self):
-        for data in self.segment:
-            event = WebhookEvent(data, type_hint=self.type_hint)
+        for data in self.generator:
+            event = WebhookEvent(
+                data, 
+                session=self.session, 
+                type_hint=self.type_hint
+            )
 
             if event.is_order():
-                yield Order(data)
-
+                yield event.to_order()
+            
             elif event.is_return():
-                yield Return(data)
-
+                yield event.to_return()
+            
             elif event.is_subscription_activated():
-                yield SubscriptionActivated(data)
-
+                yield event.to_subscription(True)
+            
             elif event.is_subscription_deactivated():
-                yield SubscriptionDeactivated(data)
+                yield event.to_subscription(False)
+            else:
+                yield event
 
 class WebhookEvent(object):
     """docstring here
     """
-    def __init__(self, data={}, type_hint=None):
+    def __init__(self, data={}, session=None, type_hint=None):
         self.id = data.get("id", "")
         self.live = data.get("live", False)
         self.processed = data.get("processed", False)
@@ -44,9 +51,11 @@ class WebhookEvent(object):
             if isinstance(self.created, int):
                 self.created = datetime.utcfromtimestamp(self.created // 1000)
 
+        self.raw = data
         self.data = data.get("data", {})
+        self.session = session
 
-        if not(self.type == type_hint):
+        if type_hint and not(self.type == type_hint):
             self.logger.warning(
                 f"Event type is '{self.type}', but was given type hint of: "
                 f"'{type_hint}'; fallout from disparate types likely!"
@@ -72,6 +81,24 @@ class WebhookEvent(object):
     def is_subscription_deactivated(self):
         return self.type == "subscription.deactivated"
 
+    @abstractmethod
+    def convert(self, sub_class):
+        return sub_class(self.raw, self.session)
+
+    @abstractmethod
+    def to_order(self):
+        return self.convert(Order)
+
+    @abstractmethod
+    def to_return(self):
+        return self.convert(Return)
+
+    @abstractmethod
+    def to_subscription(self, active):
+        if active:
+            return self.convert(SubscriptionActivated)
+        return self.convert(SubscriptionDeactivated)
+
     def __repr__(self):
         return f"<Event type='{self.type}' id='{self.id}'>"
 
@@ -80,7 +107,7 @@ class Order(WebhookEvent):
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="order.completed")
-        self.session = session
+        self.session = session or self.session
 
         self._customer = None
         self._recipients = None
@@ -210,24 +237,31 @@ class Return(WebhookEvent):
         super().__init__(data, type_hint="return.created")
         self.session = session
 
+        self._order = None
+        self._model = None
+
     @property
     def order(self):
-        original = self.data.get("original", {})
-        reference = original.get("reference", "")
-        if self.session:
-            query = self.session.query(models.Order).filter_by(
-                        reference=reference
-                    )
-            original = query.first()
-        return original
+        if not(self._order):
+            original = self.data.get("original", {})
+            reference = original.get("reference", "")
+            if self.session:
+                query = self.session.query(models.Order).filter_by(
+                            reference=reference
+                        )
+                original = query.first()
+            self._order = original
+        return self._order
 
     @property
     def model(self):
-        args = {
-            "reference": self.data.get("reference"),
-            "amount": self.data.get("totalReturnInPayoutCurrency", 0)
-        }
-        return models.Return(**args)
+        if not(self._model):
+            args = {
+                "reference": self.data.get("reference"),
+                "amount": self.data.get("totalReturnInPayoutCurrency", 0)
+            }
+            self._model = models.Return(**args)
+        return self._model
 
 # @ToDo -> Condense these into their own `SubscriptionEvent` sub-class
 class SubscriptionActivated(WebhookEvent):
@@ -237,26 +271,30 @@ class SubscriptionActivated(WebhookEvent):
         super().__init__(data, type_hint="subscription.activated")
         self.session = session
 
+        self._user = None
+
     @property
     def user(self):
-        account = self.data.get("account", {})
-        contact = self.data.get("contact", {})
-        args = {
-            "email": contact.get("email"),
-            "first": contact.get("first", "John"),
-            "last": contact.get("last", "Doe"),
-            "language_code": account.get("language", "en"),
-            "country_code": account.get("country", "US"),
-        }
+        if not(self._user):
+            account = self.data.get("account", {})
+            contact = self.data.get("contact", {})
+            args = {
+                "email": contact.get("email"),
+                "first": contact.get("first", "John"),
+                "last": contact.get("last", "Doe"),
+                "language_code": account.get("language", "en"),
+                "country_code": account.get("country", "US"),
+            }
 
-        user = None
-        if self.session:
-            email = contact.get("email")
-            query = self.session.query(models.User).filter_by(email=email)
-            user = query.first()
+            user = None
+            if self.session:
+                email = contact.get("email")
+                query = self.session.query(models.User).filter_by(email=email)
+                user = query.first()
 
-        user = user or models.User(**args)
-        user.subscribed = self.data.get("active", False)
+            user = user or models.User(**args)
+            user.subscribed = self.data.get("active", False)
+            self._user = user
         return user
 
 class SubscriptionDeactivated(WebhookEvent):
@@ -265,25 +303,29 @@ class SubscriptionDeactivated(WebhookEvent):
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.deactivated")
         self.session = session
+
+        self._user = None
     
     @property
     def user(self):
-        account = self.data.get("account", {})
-        contact = self.data.get("contact", {})
-        args = {
-            "email": contact.get("email"),
-            "first": contact.get("first", "John"),
-            "last": contact.get("last", "Doe"),
-            "language_code": account.get("language", "en"),
-            "country_code": account.get("country", "US"),
-        }
+        if not(self._user):
+            account = self.data.get("account", {})
+            contact = self.data.get("contact", {})
+            args = {
+                "email": contact.get("email"),
+                "first": contact.get("first", "John"),
+                "last": contact.get("last", "Doe"),
+                "language_code": account.get("language", "en"),
+                "country_code": account.get("country", "US"),
+            }
 
-        user = None
-        if self.session:
-            email = contact.get("email")
-            query = self.session.query(models.User).filter_by(email=email)
-            user = query.first()
+            user = None
+            if self.session:
+                email = contact.get("email")
+                query = self.session.query(models.User).filter_by(email=email)
+                user = query.first()
 
-        user = user or models.User(**args)
-        user.subscribed = self.data.get("active", False)
-        return user
+            user = user or models.User(**args)
+            user.subscribed = self.data.get("active", False)
+            self._user = user
+        return self._user

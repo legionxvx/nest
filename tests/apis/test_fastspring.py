@@ -1,15 +1,30 @@
 from base64 import b64encode, urlsafe_b64encode
-from os import path, urandom
+from datetime import datetime, timedelta
+from os import path, urandom, environ
 from urllib.parse import urlencode, urljoin
-
-from datetime import datetime
 
 import pytest
 
 from nest.apis.fastspring import FastSpring
-from nest.apis.fastspring.events import EventParser, Order, WebhookEvent
+from nest.apis.fastspring.events import (
+    EventParser, 
+    Order, 
+    Return, 
+    SubscriptionActivated, 
+    SubscriptionDeactivated, 
+    WebhookEvent
+)
 from nest.engines.psql import PostgreSQLEngine
 
+SkipIfNoAuth = pytest.mark.skipif(
+    not(environ.get("FS_AUTH_USER") and environ.get("FS_AUTH_PASS")), 
+    reason="You must have PostgreSQL 12 in order to run these tests."
+)
+
+SkipIfNoPsql = pytest.mark.skipif(
+    not(path.exists("/usr/lib/postgresql/12/bin/pg_ctl")), 
+    reason="You must have PostgreSQL 12 in order to run these tests."
+)
 
 def random_str(length=16, safe=True):
     rv, bits = b"", urandom(length)
@@ -37,6 +52,7 @@ def database(engine):
 def session():
     yield FastSpring()
 
+@SkipIfNoAuth
 def test_session_hooks(session):
     counter = 0
     def callback(*args, **kwargs):
@@ -48,6 +64,7 @@ def test_session_hooks(session):
     session.get("/")
     assert(counter == 1)
 
+@SkipIfNoAuth
 def test_fastspring_get_products(session):
     products = []
     for product, info in session.get_products(blacklist=["bundle"]).items():
@@ -75,6 +92,7 @@ def test_fastspring_get_products(session):
     product_info = session.get_products(filter=[random_str()])
     assert(product_info == {})
 
+@SkipIfNoAuth
 @pytest.mark.parametrize("params", [
     (
         {
@@ -153,39 +171,49 @@ def test_fastspring_get_orders(session, params):
         if counter > limit + 10:
             break
 
-@pytest.mark.parametrize("type, params", [
+@SkipIfNoAuth
+@pytest.mark.parametrize("event_type, params", [
     ("processed", {"days":1}),
-    ("unprocessed", {"days": 1})
+    ("unprocessed", {"begin": 0})
 ])
-def test_fastspring_get_events(session, type, params):
+def test_fastspring_get_events(session, event_type, params):
+    delta = timedelta(days=params.get("days", 0))
+    begin = datetime.utcnow() - delta
+    end = datetime.utcnow()
+
     counter, limit = 0, 20
-    for event in session.get_events(type, params=params):
+    for event in session.get_events(event_type, params=params):
         counter += 1
-        if type == "processed":
+        if event_type == "processed":
             assert(event.get("processed"))
         else:
             assert(not(event.get("processed")))
 
-        event = WebhookEvent(event)
-        assert(event.type is not None)
+        if counter > limit:
+            break
+
+@SkipIfNoAuth
+def test_fastspring_update_event(session):
+    counter, limit = 0, 20
+    for event in session.get_events("processed", params={"days": 1}):
+        counter += 1
+        res = session.update_event(event.get("id"), params={"processed": True})
+        assert(res.get("processed"))
 
         if counter > limit:
             break
 
-def test_fastspring_update_event(session):
-    for event in session.get_events("processed", params={"days":1}):
-        res = session.update_event(
-            event.get("id"),
-            params={
-                "processed": True
-            }
-        )
-        assert(res.get("processed"))
-        break
+@SkipIfNoAuth
+@SkipIfNoPsql
+def test_event_parser(session, database):
+    type_map = {
+        "order.completed": Order,
+        "return.created": Return,
+        "subscription.activated": SubscriptionActivated,
+        "subscription.deactivated": SubscriptionDeactivated,
+    }
 
-def test_order_event(session, database):
-    for event in session.get_events("processed", params={"days":2}):
-        order = Order(event, session=database)
-        database.add(order.model)
-        database.commit()
-        break
+    generator = session.get_events("processed", params={"days":1})
+    for event in EventParser(generator, session=database):
+        if event.type in type_map.keys():
+            assert(isinstance(event, type_map.get(event.type)))
