@@ -18,7 +18,7 @@ from nest.engines.psql import PostgreSQLEngine
 
 SkipIfNoAuth = pytest.mark.skipif(
     not(environ.get("FS_AUTH_USER") and environ.get("FS_AUTH_PASS")), 
-    reason="You must have PostgreSQL 12 in order to run these tests."
+    reason="You must have FastSpring API credentials to run these tests."
 )
 
 SkipIfNoPsql = pytest.mark.skipif(

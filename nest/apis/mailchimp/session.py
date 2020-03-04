@@ -75,7 +75,6 @@ class Mailchimp(Session):
             return md5(message).hexdigest()
         elif isinstance(message, str):
             return md5(message.encode()).hexdigest()
-        return md5(b"").hexdigest()
 
     @classmethod
     def multijoin(cls, url, *args, seperator="/"):
