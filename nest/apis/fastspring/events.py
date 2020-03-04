@@ -7,7 +7,11 @@ from nest.engines.psql import models
 
 
 class EventParser(object):
-    """docstring here
+    """Takes in a generator or other iterable object and spits 
+    constructs appropriate WebhookEvent subclasses.
+
+    Any session or type hinting passed to this will be forwarded to 
+    resulting objects.
     """
     def __init__(self, generator, session=None, type_hint=None):
         self.generator = generator
@@ -37,7 +41,10 @@ class EventParser(object):
                 yield event
 
 class WebhookEvent(object):
-    """docstring here
+    """An object representation of a FastSpring API Webhook event.
+
+    If a session is provided, most of the properties will be valid new 
+    or existing database objects.
     """
     def __init__(self, data={}, session=None, type_hint=None):
         self.id = data.get("id", "")
@@ -103,7 +110,20 @@ class WebhookEvent(object):
         return f"<Event type='{self.type}' id='{self.id}'>"
 
 class Order(WebhookEvent):
-    """docstring here
+    """Order webhook event.
+
+        :param customer: The customer who purchased this order
+        :param recipients: The list of recipients this order is going 
+        to. Right now we only use the first recipient (usually the 
+        customer) when constructing the model.
+        :param gift: True if the customer is different than the 
+        first recipient, else False
+        :param products: The list of products in this order.
+        :param paths: List of product path/if of the parent or 
+        triggering item of the items in this order
+        :param total: The order total in USD
+        :param discount: The order discount in USD
+        :param model: Resulting database ``Order`` object
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="order.completed")
@@ -141,7 +161,8 @@ class Order(WebhookEvent):
                 info = recipient.get("recipient", {})
                 email = info.get("email", "")
                 if self.session:
-                    query = self.session.query(models.User).filter_by(email=email)
+                    query = self.session.query(models.User).\
+                        filter_by(email=email)
                     user = query.first()
                     if user:
                         recipients[i] = user
@@ -231,7 +252,10 @@ class Order(WebhookEvent):
                 f"recipients='{self.recipients}'>")
 
 class Return(WebhookEvent):
-    """docstring here
+    """Return webhook event.
+
+        :param order: The original order this return is for
+        :param model: Resulting database ``Return`` object
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="return.created")
@@ -265,7 +289,9 @@ class Return(WebhookEvent):
 
 # @ToDo -> Condense these into their own `SubscriptionEvent` sub-class
 class SubscriptionActivated(WebhookEvent):
-    """docstring here
+    """Subscription Activation event
+
+        :param user: The user this subscription is for
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.activated")
@@ -298,7 +324,9 @@ class SubscriptionActivated(WebhookEvent):
         return user
 
 class SubscriptionDeactivated(WebhookEvent):
-    """docstring here
+    """Subscription Deactivation event
+
+        :param user: The user this subscription is for
     """
     def __init__(self, data={}, session=None):
         super().__init__(data, type_hint="subscription.deactivated")

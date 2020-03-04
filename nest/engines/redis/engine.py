@@ -8,7 +8,7 @@ from nest.types import Singleton
 
 
 class RedisEngine(Redis, metaclass=Singleton):
-    """docstring here
+    """An engine connected to a Redis instance.
     """
     DEFAULT_CONNECTION_DETAILS = {
         "host": "localhost",

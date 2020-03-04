@@ -6,7 +6,7 @@ from nest.types import Singleton
 
 
 class LockFactory(RedLockFactory, metaclass=Singleton):
-    """docstring here
+    """Redis lock factory.
     """
     DEFAULT_CONNECTION_DETAILS = [
         {

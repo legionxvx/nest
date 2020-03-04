@@ -29,10 +29,10 @@ PRICE = DECIMAL(10, 2)
 Base = declarative_base()
 
 class OrderProductAssociation(Base):
-    """docstring here
+    """Associative table for Orders and their Products
 
-        :param order_id:
-        :param product_id:
+        :param order_id: Order foreign-key
+        :param product_id: Product foreign-key
     """
     __tablename__ = "order_product_associations"
 
@@ -57,22 +57,32 @@ class OrderProductAssociation(Base):
     )
 
 class User(Base):
-    """docstring here
+    """A user/customer.
 
-        :param id:
-        :param email:
-        :param first:
-        :param last:
-        :param country_code:
-        :param language_code:
-        :param created:
-        :param last_token_request:
-        :param subscribed:
+        :param email: The user's email
+        :param first: The user's first name
+        :param last: The user's last name
+        :param country_code: ISO 3166-1 alpha-2 (or 3) country code
+        :param language_code: ISO 639-1 or ISO 639-2 language code
+        :param created: Date of creation
+        :param last_token_request: Date of last license reset
+        :param subscribed: Plugged-In Membership status
 
-        :param orders:
+        :param orders: List of orders belonging to this user
 
-        :param products:
-        :param earliest_order_date:
+        :param products: List of products belonging to orders which 
+        belong to this user
+        :param earliest_order_date: Date of first order
+        :param owns_any_paid: True if the user owns any products that 
+        are not `free`. Note that this does not necessarily mean that 
+        the user has paid money for any items, just that they own an 
+        item that has a non-zero price.
+        :param owns_any_in_set: Given a set name, returns True if the 
+        user owns a product belonging to this set
+        :param owns_current_in_set: Given a set name, returns True if 
+        the user owns the most recent version belonging to this set
+        :param highest_version_in_set: Given a set name, returns the 
+        max ``Product.version`` they own in this set
     """
     __tablename__ = "users"
 
@@ -169,10 +179,6 @@ class User(Base):
 
     @hybrid_method
     def owns_any_in_set(self, value):
-        """docstring here
-
-            :param value:
-        """
         for product in self.products:
             if product.set == value:
                 return True
@@ -195,10 +201,6 @@ class User(Base):
 
     @hybrid_method
     def owns_current_in_set(self, value):
-        """docstring here
-
-            :param value:
-        """
         for product in self.products:
             if product.set == value and product.current and not(product.demo):
                 return True
@@ -229,10 +231,6 @@ class User(Base):
 
     @hybrid_method
     def highest_version_in_set(self, value):
-        """docstring here
-
-            :param value:
-        """
         m_versions = [0]
         for product in self.products:
             if product.set == value and not(product.demo):
@@ -257,25 +255,27 @@ class User(Base):
         return statement.label(f"highest-version-of-{value}")
 
 class Order(Base):
-    """docstring here
+    """An order.
 
-        :param id:
-        :param reference:
-        :param created:
-        :param date:
-        :param live:
-        :param gift:
-        :param total:
-        :param discount:
-        :param paths:
-        :param coupons:
-        :param name:
+        :param reference: Reference id
+        :param created: Date of creation
+        :param date: Date of order
+        :param live: Test order
+        :param gift: Gifted order
+        :param total: Order total in USD
+        :param discount: Order discount in USD
+        :param paths: List of product path/if of the parent or 
+        triggering item of the items in this order
+        :param coupons: List of coupons applied to this order
+        :param name: Display name on order
 
-        :param user_id:
-        :param products:
-        :param returns:
+        :param user_id: ``User.id`` foreign-key
+        :param products: Products belonging to this order
+        :param returns: Returns belonging to this order
 
-        :param returned:
+        :param returned: True if any return is not partial or the the 
+        sum of all returns belonging to this order is greater than the 
+        order's total
     """
     __tablename__ = "orders"
 
@@ -338,16 +338,16 @@ class Order(Base):
         return f"<Order reference='{self.reference}'>"
 
 class Return(Base):
-    """docstring here
+    """A return of an order
 
-        :param id:
-        :param reference:
-        :param amount:
+        :param reference: Reference id
+        :param amount: Amount of return in USD
 
-        :param order_id:
-        :param order:
+        :param order_id: ``Order.id`` foreign-key
+        :param order: The order this return belongs to
 
-        :param partial:
+        :param partial: True if the return amount is not greater-than 
+        or equal to the original order total
     """
     __tablename__ = "returns"
 
@@ -384,21 +384,22 @@ class Return(Base):
         return f"<Return for='{self.reference}'>"
 
 class Product(Base):
-    """docstring here
+    """A product.
 
-        :param id:
-        :param name:
-        :param aliases:
-        :param price:
-        :param set:
-        :param version:
-        :param signer:
-        :param token:
-        :param part:
-        :param current:
-        :param demo:
+        :param name: Display name
+        :param aliases: Alternate names or paths
+        :param price: MSRP
+        :param set: Set name this product belongs to
+        :param version: Version number
+        :param signer: Filename of private key that generates this 
+        product's license
+        :param token: Unique identifier for license message
+        :param part: Unique part of license file name
+        :param current: True if this product is the most current 
+        iteration of a given set
+        :param demo: Whether or not this product is a demo
 
-        :param orders:
+        :param orders: Orders with this product in it
     """
     __tablename__ = "products"
 
