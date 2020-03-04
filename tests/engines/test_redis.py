@@ -1,5 +1,5 @@
 from base64 import b64encode, urlsafe_b64encode
-from os import urandom
+from os import path, urandom
 from time import sleep
 
 import pytest
@@ -9,6 +9,10 @@ from redlock import RedLockError
 
 from nest.engines.redis import LockFactory, RedisEngine
 
+SkipIfNoRedis = pytest.mark.skipif(
+    not(path.exists("/usr/bin/redis-server")), 
+    reason="You must have Redis installed."
+)
 
 def random_str(length=16, safe=True):
     rv, bits = b"", urandom(length)
@@ -31,12 +35,14 @@ def lock_factory(redisdb):
     ]
     yield LockFactory(connection_details=connection_details)
 
+@SkipIfNoRedis
 def test_redis_engine_basic(engine):
     key, value = random_str(), random_str()
     assert(engine is not None)
     assert(engine.set(key, value))
     assert(engine.get(key) == value.encode())
 
+@SkipIfNoRedis
 def test_redis_engine_lock(engine):
     res = random_str()
     with engine.lock(res, blocking_timeout=5):
@@ -45,6 +51,7 @@ def test_redis_engine_lock(engine):
             with engine.lock(res, blocking_timeout=1):
                 pass
 
+@SkipIfNoRedis
 def test_redis_engine_pubsub(engine):
     ps = engine.pubsub()
     chan = random_str()
@@ -70,6 +77,7 @@ def test_redis_engine_pubsub(engine):
     assert(res.get("channel") == chan.encode())
     assert(res.get("type") == "unsubscribe")
 
+@SkipIfNoRedis
 def test_lock_factory(lock_factory):
     lf = lock_factory
 
