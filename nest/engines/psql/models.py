@@ -29,10 +29,7 @@ PRICE = DECIMAL(10, 2)
 Base = declarative_base()
 
 class OrderProductAssociation(Base):
-    """Associative table for Orders and their Products
-
-        :param order_id: Order foreign-key
-        :param product_id: Product foreign-key
+    """Associative table for Orders and their Products.
     """
     __tablename__ = "order_product_associations"
 
@@ -59,30 +56,16 @@ class OrderProductAssociation(Base):
 class User(Base):
     """A user/customer.
 
-        :param email: The user's email
-        :param first: The user's first name
-        :param last: The user's last name
-        :param country_code: ISO 3166-1 alpha-2 (or 3) country code
-        :param language_code: ISO 639-1 or ISO 639-2 language code
-        :param created: Date of creation
-        :param last_token_request: Date of last license reset
-        :param subscribed: Plugged-In Membership status
+    :var email: The user's email.
+    :var first: The user's first name.
+    :var last: The user's last name.
+    :var country_code: ISO 3166-1 alpha-2 (or 3) country code.
+    :var language_code: ISO 639-1 or ISO 639-2 language code.
+    :var created: Date of creation.
+    :var last_token_request: Date of last license reset.
+    :var subscribed: Plugged-In Membership status.
 
-        :param orders: List of orders belonging to this user
-
-        :param products: List of products belonging to orders which 
-        belong to this user
-        :param earliest_order_date: Date of first order
-        :param owns_any_paid: True if the user owns any products that 
-        are not `free`. Note that this does not necessarily mean that 
-        the user has paid money for any items, just that they own an 
-        item that has a non-zero price.
-        :param owns_any_in_set: Given a set name, returns True if the 
-        user owns a product belonging to this set
-        :param owns_current_in_set: Given a set name, returns True if 
-        the user owns the most recent version belonging to this set
-        :param highest_version_in_set: Given a set name, returns the 
-        max ``Product.version`` they own in this set
+    :var orders: List of orders belonging to this user.
     """
     __tablename__ = "users"
 
@@ -93,13 +76,13 @@ class User(Base):
     country_code       = Column(Text, nullable=False, default="US")
     language_code      = Column(Text, nullable=False, default="en")
     created            = Column(
-                            DateTime, 
-                            nullable=False, 
+                            DateTime,
+                            nullable=False,
                             default=datetime.utcnow()
                         )
     last_token_request = Column(
-                            DateTime, 
-                            nullable=False, 
+                            DateTime,
+                            nullable=False,
                             default=datetime.utcfromtimestamp(0)
                         )
     subscribed         = Column(Boolean, nullable=False, default=False)
@@ -116,6 +99,8 @@ class User(Base):
 
     @hybrid_property
     def products(self):
+        """Products belonging to this user.
+        """
         products = []
         for order in self.orders:
             if order.returned:
@@ -133,7 +118,7 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(
                             or_(
-                                Order.returned == None, 
+                                Order.returned == None,
                                 not_(Order.returned)
                             )
                         ).\
@@ -143,6 +128,8 @@ class User(Base):
 
     @hybrid_property
     def earliest_order_date(self):
+        """Date of first order.
+        """
         if len(self.orders) > 0:
             return min([order.date for order in self.orders])
         return datetime.utcfromtimestamp(0)
@@ -154,6 +141,12 @@ class User(Base):
 
     @hybrid_property
     def owns_any_paid(self):
+        """True if the user owns any product whose price is non-zero.
+
+        Note that this does not necessarily mean that the user has
+        paid money for any items, just that they own an item that has
+        a non-zero price.
+        """
         for order in self.orders:
             for product in order.products:
                 if product.price > 0:
@@ -166,7 +159,7 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(
                             or_(
-                                Order.returned == None, 
+                                Order.returned == None,
                                 not_(Order.returned)
                             )
                         ).\
@@ -179,6 +172,11 @@ class User(Base):
 
     @hybrid_method
     def owns_any_in_set(self, value):
+        """Given a set name, returns True if the user owns a product
+        belonging to this set.
+
+        :param value: The set name.
+        """
         for product in self.products:
             if product.set == value:
                 return True
@@ -190,7 +188,7 @@ class User(Base):
                     where(Order.user_id == cls.id).\
                     where(
                         or_(
-                            Order.returned == None, 
+                            Order.returned == None,
                             not_(Order.returned)
                         )
                     ).\
@@ -201,6 +199,11 @@ class User(Base):
 
     @hybrid_method
     def owns_current_in_set(self, value):
+        """Given a set name, returns True if the user owns the most
+        recent version belonging to this set.
+
+        :param value: The set name.
+        """
         for product in self.products:
             if product.set == value and product.current and not(product.demo):
                 return True
@@ -212,7 +215,7 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(
                             or_(
-                                Order.returned == None, 
+                                Order.returned == None,
                                 not_(Order.returned)
                             )
                         ).\
@@ -222,8 +225,8 @@ class User(Base):
                         ).\
                         where(
                             and_(
-                                Product.set == value, 
-                                Product.current, 
+                                Product.set == value,
+                                Product.current,
                                 not_(Product.demo)
                             )
                         )
@@ -231,6 +234,11 @@ class User(Base):
 
     @hybrid_method
     def highest_version_in_set(self, value):
+        """Given a set name, returns the highest ``Product.version``
+        of this set.
+
+        :param value: The set name.
+        """
         m_versions = [0]
         for product in self.products:
             if product.set == value and not(product.demo):
@@ -243,7 +251,7 @@ class User(Base):
                         where(Order.user_id == cls.id).\
                         where(
                             or_(
-                                Order.returned == None, 
+                                Order.returned == None,
                                 not_(Order.returned)
                             )
                         ).\
@@ -257,25 +265,21 @@ class User(Base):
 class Order(Base):
     """An order.
 
-        :param reference: Reference id
-        :param created: Date of creation
-        :param date: Date of order
-        :param live: Test order
-        :param gift: Gifted order
-        :param total: Order total in USD
-        :param discount: Order discount in USD
-        :param paths: List of product path/if of the parent or 
-        triggering item of the items in this order
-        :param coupons: List of coupons applied to this order
-        :param name: Display name on order
+    :var reference: Reference id.
+    :var created: Date of creation.
+    :var date: Date of order.
+    :var live: Test order.
+    :var gift: Gifted order.
+    :var total: Order total in USD.
+    :var discount: Order discount in USD.
+    :var paths: List of product paths/ids of the parent or
+        triggering item of items in this order.
+    :var coupons: List of coupons applied to this order.
+    :var name: Display name on order.
 
-        :param user_id: ``User.id`` foreign-key
-        :param products: Products belonging to this order
-        :param returns: Returns belonging to this order
-
-        :param returned: True if any return is not partial or the the 
-        sum of all returns belonging to this order is greater than the 
-        order's total
+    :var user_id: ``User.id`` foreign-key.
+    :var products: Products belonging to this order.
+    :var returns: Returns belonging to this order.
     """
     __tablename__ = "orders"
 
@@ -316,6 +320,10 @@ class Order(Base):
 
     @hybrid_property
     def returned(self):
+        """True if any return is not partial or the the sum of all
+        returns belonging to this order is greater than the order's
+        total.
+        """
         if len(self.returns) == 0:
             return False
 
@@ -340,14 +348,11 @@ class Order(Base):
 class Return(Base):
     """A return of an order
 
-        :param reference: Reference id
-        :param amount: Amount of return in USD
+    :var reference: Reference id.
+    :var amount: Amount of return in USD.
 
-        :param order_id: ``Order.id`` foreign-key
-        :param order: The order this return belongs to
-
-        :param partial: True if the return amount is not greater-than 
-        or equal to the original order total
+    :var order_id: ``Order.id`` foreign-key.
+    :var order: The order this return belongs to.
     """
     __tablename__ = "returns"
 
@@ -372,6 +377,9 @@ class Return(Base):
 
     @hybrid_property
     def partial(self):
+        """True if the return amount is not greater-than or equal to
+        the original order total.
+        """
         return self.amount < self.order.total
 
     @partial.expression
@@ -386,20 +394,20 @@ class Return(Base):
 class Product(Base):
     """A product.
 
-        :param name: Display name
-        :param aliases: Alternate names or paths
-        :param price: MSRP
-        :param set: Set name this product belongs to
-        :param version: Version number
-        :param signer: Filename of private key that generates this 
-        product's license
-        :param token: Unique identifier for license message
-        :param part: Unique part of license file name
-        :param current: True if this product is the most current 
-        iteration of a given set
-        :param demo: Whether or not this product is a demo
+    :var name: Display name.
+    :var aliases: Alternate names or paths.
+    :var price: MSRP.
+    :var set: Set name this product belongs to.
+    :var version: Version number.
+    :var signer: Filename of private key that generates this
+        product's license.
+    :var token: Unique identifier for license message.
+    :var part: Unique part of license file name.
+    :var current: True if this product is the most current
+    iteration of a given set.
+    :var demo: Whether or not this product is a demo.
 
-        :param orders: Orders with this product in it
+    :var orders: Orders with this product in it.
     """
     __tablename__ = "products"
 

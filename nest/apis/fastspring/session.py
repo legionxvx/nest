@@ -11,7 +11,7 @@ from nest.apis.utils import protect
 class FastSpring(Session):
     """A custom ``Session`` to interact with FastSpring's API.
     """
-    def __init__(self, prefix=None, auth=None, hooks={}):
+    def __init__(self, auth=None, hooks={}):
         super().__init__()
         self.logger = logging.getLogger("nest")
         self.hooks = hooks
@@ -30,29 +30,37 @@ class FastSpring(Session):
         return "https://api.fastspring.com"
 
     def request(self, method, suffix, *args, **kwargs):
-        """Just like a normal ``Session.request()`` except that the 
-        ``url`` is constructed using ``prefix`` and ``suffix``
+        """A normal request except that the
+        :class:`~nest.apis.FastSpring.prefix` and suffix are joined
+        to create the endpoint.
 
-            :param method: HTTP Verb
-            :param suffix: Appended to ``prefix``
-            :param *args: Passed to ``super`` request method
-            :param **kwargs: Passed to ``super`` request method
+        :param method: HTTP Request method.
+        :param suffix: Joined to :class:`~nest.apis.FastSpring.prefix`.
+        :param args: Other positional arguments passed to request.
+        :param kwargs: Other keyword arguments passed to request.
         """
         endpoint = urljoin(self.prefix, suffix)
         return super().request(method, endpoint, *args, **kwargs)
 
     @protect(default={})
     def get_products(self, filter=[], blacklist=[], *args, **kwargs):
-        """Request the "products" endpoint.
+        """Yields product name, price, and alias information. Useful
+        for updating the corresponding database model.
 
-        The ``products`` endpoint returns information about products
-        like their parents, price, offerings, description etc.
+        ::
 
-            :param filter=[]: List of product id's
-            :param blacklist=[]: Offer type blacklist, useful for
-            removing things like bundles
-            :param *args: Passed to each ``get()`` request
-            :param **kwargs: Passed to each ``get()`` request
+            session = FastSpring()
+            session.get_products(
+                filter=["ava-ds", "ava-mc],
+                blacklist=["bundles"]
+            )
+
+        :param filter: Whitelisted product ids.
+        :param blacklist: Blacklisted product
+        :param args: Other positional arguments passed to each ``GET``
+            request.
+        :param kwargs: Other keyword arguments passed to each ``GET``
+            request.
         """
         # Endpoint accepts comma-seperated list of product names
         joined_ids = ",".join(filter)
@@ -100,15 +108,14 @@ class FastSpring(Session):
 
     @protect(default=[])
     def get_events(self, type, *args, **kwargs):
-        """Request to the "events" endpoint.
+        """Yields processed or unprocessed event data.
 
-        The events endpoint allows you to retrieve previous webhook
-        events and process them again (or in some cases for the first)
-        time.
-
-            :param type: "processed" or "unprocessed"
-            :param *args: Passed to each ``get()`` request
-            :param **kwargs: Passed to each ``get()`` request
+        :param type: Event type. Either ``'processed'`` or
+            ``'unprocessed'``.
+        :param args: Other positional arguments passed to each ``GET``
+            request.
+        :param kwargs: Other keyword arguments passed to each ``GET``
+            request.
         """
         res = self.get(f"events/{type}", *args, **kwargs)
         res.raise_for_status()
@@ -117,7 +124,8 @@ class FastSpring(Session):
         for event in data.get("events", []):
             yield event
 
-        # Drop any 'days' from params - it breaks the next request
+        # Drop the 'days' param from params - it breaks the next
+        # request
         kwargs["params"] = kwargs.get("params", {})
         kwargs["params"].pop("days", None)
 
@@ -133,19 +141,18 @@ class FastSpring(Session):
 
             res.raise_for_status()
             data = res.json()
-            
+
             for event in data.get("events", []):
                 yield event
 
     @protect(default=[])
     def get_orders(self, *args, **kwargs):
-        """Request to the "orders" endpoint.
+        """Yields order data.
 
-        The "orders" endpoint gives you information about orders
-        including those with returns. This is useful for bulk imports.
-
-            :param *args: Passed to each ``get()`` request
-            :param **kwargs: Passed to each ``get()`` request
+        :param args: Other positional arguments passed to each ``GET``
+            request.
+        :param kwargs: Other keyword arguments passed to each ``GET``
+            request.
         """
         res = self.get("orders", *args, **kwargs)
         res.raise_for_status()
@@ -163,19 +170,26 @@ class FastSpring(Session):
 
             res.raise_for_status()
             data = res.json()
-            
+
             for order in data.get("orders", []):
                 yield order
 
     @protect(default={})
     def update_event(self, id, *args, **kwargs):
-        """Requests POST to the "events" endpoint
+        """Send a ``'POST'`` request to  the ``/events/`` endpoint.
 
-        Typically you want to use this to mark an event as "processed".
+        ::
 
-            :param id: The event's id
-            :param *args: Passed to ``post()`` request
-            :param **kwargs: Passed to ``post()`` request
+            session = FastSpring()
+            session.update_event("foo", params={
+                "processed": True
+            })
+
+        :param id: The event's internal id.
+        :param args: Other positional arguments passed to ``POST``
+            request.
+        :param kwargs: Other keyword arguments passed to ``POST``
+            request.
         """
         res = self.post(f"events/{id}", *args, **kwargs)
         res.raise_for_status()

@@ -14,7 +14,7 @@ from nest.types import Singleton
 
 
 class SelfDestructingSession(Session):
-    """A `Session` that will automatically remove itself from
+    """A ``Session`` that will automatically remove itself from
     the Scoped Session registry when this wrapper object falls out of
     scope.
     """
@@ -26,7 +26,7 @@ class SelfDestructingSession(Session):
         self.factory.remove()
 
 class PostgreSQLEngine(Engine):
-    """An `Engine` connected a PostgreSQL database"""
+    """An ``Engine`` connected a PostgreSQL database"""
     DEFAULT_CONNECTION_INFO = {
         "drivername": "postgresql",
         "host": "localhost",
@@ -66,12 +66,13 @@ class PostgreSQLEngine(Engine):
         Base.metadata.create_all(self)
 
     def add_listener(self, event, func, *args, **kwargs):
-        """Adds event callback function. List of events is available
+        """Adds event callback function. Class instance is passed to
+        ``listen()`` automatically.
 
-            :param event: Name of the event
-            :param func: Callback function
-            :param *args: Passed to event.listen
-            :param **kwargs: Passed to event.listen
+        :param event: Name of the event.
+        :param func: Callback function.
+        :param args: Passed to ``event.listen()``.
+        :param kwargs: Passed to ``event.listen()``.
         """
         if not(contains(self, event, func)):
             try:
@@ -81,10 +82,11 @@ class PostgreSQLEngine(Engine):
                 self.error_logger.error(message)
 
     def remove_listener(self, event, func):
-        """Removes event callback
+        """Removes event callback function. Class instance is passed
+        to ``listen()`` automatically.
 
-            :param event: Name of the event
-            :param func: Callback function
+        :param event: Name of the event.
+        :param func: Callback function.
         """
         if contains(self, event, func):
             try:
@@ -94,20 +96,19 @@ class PostgreSQLEngine(Engine):
                 self.error_logger.error(message)
 
     def session(self, **kwargs):
-        """Create a `Session` for querying the database
+        """Create a ``Session`` for querying the database.
 
-            :param **kwargs: Passed to `Session` constructor
+        :param kwargs: Passed to ``Session`` constructor
         """
         return self.session_factory(**kwargs)
 
     def scoped_session(self, self_destruct=True, **kwargs):
-        """Create a `scoped_session` for querying the database
+        """Create a ``scoped_session`` for querying the database.
 
-            :param self_destruct=True: Returns a
-            `SelfDestructingSession` instead of a normal
-            `scoped_session`
-
-            :param **kwargs: Passed to `Session` constructor
+        :param self_destruct: Returns a
+            :class:`~nest.engines.psql.engine.SelfDestructingSession`
+            instead of a normal ``scoped_session``.
+        :param kwargs: Passed to ``Session`` constructor.
         """
         if self_destruct:
             return SelfDestructingSession(

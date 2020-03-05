@@ -23,7 +23,7 @@ def protect(default=None):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
             logger = logging.getLogger("nest")
-            
+
             rv = None
             try:
                 rv = fn(self, *args, **kwargs)
