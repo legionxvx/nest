@@ -40,24 +40,42 @@ $ pipenv install git+ssh://git@git.harrisonconsoles.com/marketing/nest.git#egg=n
 
 ## Configuration
 
-Nest looks for its configuration and credentials in the following order 
-(first found is used):
-
-1. Arguments passed into constructors at runtime
-2. `config.yaml` or `config.yml` in its root directory
-3. Environment variables with the same variable names as those found in 
-`config.yaml`
-
-Using `config.yaml` is usually most convenient.
+TBA
 
 ## Running the tests
+
+1. Set up a working development environment per the 
+[Installation](#Installation) section
+2. (Optional) Create a pytest.ini to provide API credentials and other 
+environment variables.
+```
+[pytest]
+env =
+    D:MAILCHIMP_AUTH_USER=John Doe
+    D:MAILCHIMP_AUTH_TOKEN=foo
+    D:DEFAULT_MAILCHIMP_LIST=bar
+
+    D:FS_AUTH_USER=baz
+    D:FS_AUTH_PASS=biz
+
+```
+3. (Optional) Install postgres-12 and redis-server packaged from your 
+repository to test RedisEngine and PostgreSQLEngine transactions.
+4. Run the following commands
+```
+$ pipenv install --dev
+$ pipenv run pytest tests
+```
+
+## Building docs
 
 1. Set up a working development environment per the 
 [Installation](#Installation) section
 2. Run the following commands
 ```
 $ pipenv install --dev
-$ pipenv run pytest tests
+$ cd docs
+$ pipenv run make html
 ```
 
 ## Database Migration
