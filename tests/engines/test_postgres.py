@@ -5,7 +5,6 @@ from os import urandom, path
 import pytest
 from sqlalchemy.dialects.postgresql import psycopg2
 from sqlalchemy.orm import Session
-from testing.postgresql import Postgresql, skipIfNotFound
 
 from nest.config import Config
 from nest.engines import PostgreSQLEngine
