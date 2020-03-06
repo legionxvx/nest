@@ -17,11 +17,11 @@ def config():
         MC_AUTH_USER=foo
         MC_AUTH_TOKEN=bar
 
-        [nest:postgres]
+        [nest:postgresql]
         host=localhost
         port=5432
-        user=foo
-        pass=bar
+        username=foo
+        password=bar
         database=baz
 
         [nest:redis]
@@ -54,8 +54,8 @@ def test_config_psql(config):
     info = {
         "host": "localhost",
         "port": 5432,
-        "user": "foo",
-        "pass": "bar",
+        "username": "foo",
+        "password": "bar",
         "database": "baz"
     }
     assert(config.postgres_connection_info == info)
