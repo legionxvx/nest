@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 requirements = [
     "certifi>=2019.11.28",
@@ -18,6 +18,6 @@ setup(
     version="0.1",
     description="",
     author="Nikolaus Gullotta",
-    packages=["nest"],
+    packages=find_packages(),
     install_requires=requirements,
 )
