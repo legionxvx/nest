@@ -35,12 +35,16 @@ class Logger(object):
         if cfg:
             self.cfg = cfg
 
-        self.loglevel = self.LOG_LEVELS.get(
-                self.cfg.loglevel.lower(), 
+        self.errorlogLevel = self.LOG_LEVELS.get(
+                self.cfg.errlogLevel.lower(), 
                 logging.INFO
             )
-        self.error_logger.setLevel(self.loglevel)
-        self.transcation_logger.setLevel(logging.INFO)
+        self.translogLevel = self.LOG_LEVELS.get(
+                self.cfg.translogLevel.lower(), 
+                logging.INFO
+            )
+        self.error_logger.setLevel(self.errorlogLevel)
+        self.transcation_logger.setLevel(self.translogLevel)
 
         handler = StreamHandler()
         formatter = ColoredFormatter(self.error_fmt, self.datefmt)
