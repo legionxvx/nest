@@ -32,10 +32,14 @@ class Config(object):
         self.mailchimp_auth = (mc_auth_user, mc_auth_token)
 
         self.postgres_connection_info = {}
-        for key in ["host", "port", "user", "pass", "database"]:
-            value = self.parser.get("nest:postgres", key, fallback=None)
+        for key in ["host", "port", "username", "password", "database"]:
+            value = self.parser.get("nest:postgresql", key, fallback=None)
             if key is "port":
-                value = self.parser.getint("nest:postgres", key, fallback=None)
+                value = self.parser.getint(
+                    "nest:postgresql", 
+                    key, 
+                    fallback=None
+                )
             if value:
                 self.postgres_connection_info.update({key:value})
 
@@ -43,7 +47,11 @@ class Config(object):
         for key in ["host", "port", "db"]:
             value = self.parser.get("nest:redis", key, fallback=None)
             if key is "port":
-                value = self.parser.getint("nest:redis", key, fallback=None)
+                value = self.parser.getint(
+                    "nest:redis", 
+                    key, 
+                    fallback=None
+                )
             if value:
                 self.redis_connection_info.update({key:value})
 
@@ -54,8 +62,12 @@ class Config(object):
                 for key in ["host", "port", "db"]:
                     value = self.parser.get(section, key, fallback=None)
                     if key is "port":
-                        value = self.parser.getint(section, key, fallback=None)
+                        value = self.parser.getint(
+                            section, 
+                            key, 
+                            fallback=None
+                        )
                     if value:
-                        node_info.update({key:value})
+                        node_info.update({key: value})
             if len(node_info) > 0:
                 self.redis_node_list.append(node_info)
