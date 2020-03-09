@@ -1,0 +1,813 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>API &#8212; Nest 03-15-2020 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Nest’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="api">
+<span id="id1"></span><h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-Nest"></span><p>This part of the documentation covers all the interfaces of Nest.</p>
+<div class="section" id="engines">
+<h2>Engines<a class="headerlink" href="#engines" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nest.engines.psql.PostgreSQLEngine">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.</code><code class="sig-name descname">PostgreSQLEngine</code><span class="sig-paren">(</span><em class="sig-param">url=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.PostgreSQLEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <code class="docutils literal notranslate"><span class="pre">Engine</span></code> connected a PostgreSQL database</p>
+<dl class="method">
+<dt id="nest.engines.psql.PostgreSQLEngine.add_listener">
+<code class="sig-name descname">add_listener</code><span class="sig-paren">(</span><em class="sig-param">event</em>, <em class="sig-param">func</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.PostgreSQLEngine.add_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds event callback function. Class instance is passed to
+<code class="docutils literal notranslate"><span class="pre">listen()</span></code> automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> – Name of the event.</p></li>
+<li><p><strong>func</strong> – Callback function.</p></li>
+<li><p><strong>args</strong> – Passed to <code class="docutils literal notranslate"><span class="pre">event.listen()</span></code>.</p></li>
+<li><p><strong>kwargs</strong> – Passed to <code class="docutils literal notranslate"><span class="pre">event.listen()</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.PostgreSQLEngine.remove_listener">
+<code class="sig-name descname">remove_listener</code><span class="sig-paren">(</span><em class="sig-param">event</em>, <em class="sig-param">func</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.PostgreSQLEngine.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes event callback function. Class instance is passed
+to <code class="docutils literal notranslate"><span class="pre">listen()</span></code> automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> – Name of the event.</p></li>
+<li><p><strong>func</strong> – Callback function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.PostgreSQLEngine.scoped_session">
+<code class="sig-name descname">scoped_session</code><span class="sig-paren">(</span><em class="sig-param">self_destruct=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.PostgreSQLEngine.scoped_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <code class="docutils literal notranslate"><span class="pre">scoped_session</span></code> for querying the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self_destruct</strong> – Returns a
+<a class="reference internal" href="#nest.engines.psql.engine.SelfDestructingSession" title="nest.engines.psql.engine.SelfDestructingSession"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelfDestructingSession</span></code></a>
+instead of a normal <code class="docutils literal notranslate"><span class="pre">scoped_session</span></code>.</p></li>
+<li><p><strong>kwargs</strong> – Passed to <code class="docutils literal notranslate"><span class="pre">Session</span></code> constructor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.PostgreSQLEngine.session">
+<code class="sig-name descname">session</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.PostgreSQLEngine.session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <code class="docutils literal notranslate"><span class="pre">Session</span></code> for querying the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – Passed to <code class="docutils literal notranslate"><span class="pre">Session</span></code> constructor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.psql.engine.SelfDestructingSession">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.engine.</code><code class="sig-name descname">SelfDestructingSession</code><span class="sig-paren">(</span><em class="sig-param">factory</em>, <em class="sig-param">session</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.engine.SelfDestructingSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">Session</span></code> that will automatically remove itself from
+the Scoped Session registry when this wrapper object falls out of
+scope.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.redis.RedisEngine">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.redis.</code><code class="sig-name descname">RedisEngine</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.redis.RedisEngine" title="Permalink to this definition">¶</a></dt>
+<dd><p>An engine connected to a Redis instance.</p>
+<dl class="method">
+<dt id="nest.engines.redis.RedisEngine.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.redis.RedisEngine.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value at key <code class="docutils literal notranslate"><span class="pre">name</span></code>, or None if the key doesn’t exist</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.redis.RedisEngine.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em>, <em class="sig-param">ex=None</em>, <em class="sig-param">px=None</em>, <em class="sig-param">nx=False</em>, <em class="sig-param">xx=False</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.redis.RedisEngine.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value at key <code class="docutils literal notranslate"><span class="pre">name</span></code> to <code class="docutils literal notranslate"><span class="pre">value</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">ex</span></code> sets an expire flag on key <code class="docutils literal notranslate"><span class="pre">name</span></code> for <code class="docutils literal notranslate"><span class="pre">ex</span></code> seconds.</p>
+<p><code class="docutils literal notranslate"><span class="pre">px</span></code> sets an expire flag on key <code class="docutils literal notranslate"><span class="pre">name</span></code> for <code class="docutils literal notranslate"><span class="pre">px</span></code> milliseconds.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">nx</span></code> if set to True, set the value at key <code class="docutils literal notranslate"><span class="pre">name</span></code> to <code class="docutils literal notranslate"><span class="pre">value</span></code> only</dt><dd><p>if it does not exist.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">xx</span></code> if set to True, set the value at key <code class="docutils literal notranslate"><span class="pre">name</span></code> to <code class="docutils literal notranslate"><span class="pre">value</span></code> only</dt><dd><p>if it already exists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.redis.LockFactory">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.redis.</code><code class="sig-name descname">LockFactory</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.redis.LockFactory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redis lock factory.</p>
+<dl class="method">
+<dt id="nest.engines.redis.LockFactory.create_lock">
+<code class="sig-name descname">create_lock</code><span class="sig-paren">(</span><em class="sig-param">resource</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.redis.LockFactory.create_lock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new RedLock object and reuse stored Redis clients.
+All the kwargs it received would be passed to the RedLock’s __init__
+function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nest.engines.psql.models">
+<span id="database-models"></span><h2>Database Models<a class="headerlink" href="#module-nest.engines.psql.models" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nest.engines.psql.models.Order">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.models.</code><code class="sig-name descname">Order</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.Order" title="Permalink to this definition">¶</a></dt>
+<dd><p>An order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> – Reference id.</p></li>
+<li><p><strong>created</strong> – Date of creation.</p></li>
+<li><p><strong>date</strong> – Date of order.</p></li>
+<li><p><strong>live</strong> – Test order.</p></li>
+<li><p><a class="reference internal" href="#nest.apis.fastspring.events.Order.gift" title="nest.apis.fastspring.events.Order.gift"><strong>gift</strong></a> – Gifted order.</p></li>
+<li><p><a class="reference internal" href="#nest.apis.fastspring.events.Order.total" title="nest.apis.fastspring.events.Order.total"><strong>total</strong></a> – Order total in USD.</p></li>
+<li><p><a class="reference internal" href="#nest.apis.fastspring.events.Order.discount" title="nest.apis.fastspring.events.Order.discount"><strong>discount</strong></a> – Order discount in USD.</p></li>
+<li><p><a class="reference internal" href="#nest.apis.fastspring.events.Order.paths" title="nest.apis.fastspring.events.Order.paths"><strong>paths</strong></a> – List of product paths/ids of the parent or
+triggering item of items in this order.</p></li>
+<li><p><strong>coupons</strong> – List of coupons applied to this order.</p></li>
+<li><p><strong>name</strong> – Display name on order.</p></li>
+<li><p><strong>user_id</strong> – <code class="docutils literal notranslate"><span class="pre">User.id</span></code> foreign-key.</p></li>
+<li><p><a class="reference internal" href="#nest.engines.psql.models.User.products" title="nest.engines.psql.models.User.products"><strong>products</strong></a> – Products belonging to this order.</p></li>
+<li><p><strong>returns</strong> – Returns belonging to this order.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="nest.engines.psql.models.Order.returned">
+<code class="sig-name descname">returned</code><a class="headerlink" href="#nest.engines.psql.models.Order.returned" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if any return is not partial or the the sum of all
+returns belonging to this order is greater than the order’s
+total.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.psql.models.OrderProductAssociation">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.models.</code><code class="sig-name descname">OrderProductAssociation</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.OrderProductAssociation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Associative table for Orders and their Products.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.psql.models.Product">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.models.</code><code class="sig-name descname">Product</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.Product" title="Permalink to this definition">¶</a></dt>
+<dd><p>A product.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Display name.</p></li>
+<li><p><strong>aliases</strong> – Alternate names or paths.</p></li>
+<li><p><strong>price</strong> – MSRP.</p></li>
+<li><p><a class="reference internal" href="#nest.engines.redis.RedisEngine.set" title="nest.engines.redis.RedisEngine.set"><strong>set</strong></a> – Set name this product belongs to.</p></li>
+<li><p><strong>version</strong> – Version number.</p></li>
+<li><p><strong>signer</strong> – Filename of private key that generates this
+product’s license.</p></li>
+<li><p><strong>token</strong> – Unique identifier for license message.</p></li>
+<li><p><strong>part</strong> – Unique part of license file name.</p></li>
+<li><p><strong>current</strong> – True if this product is the most current</p></li>
+</ul>
+</dd>
+</dl>
+<p>iteration of a given set.
+:var demo: Whether or not this product is a demo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><p><strong>orders</strong> – Orders with this product in it.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.psql.models.Return">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.models.</code><code class="sig-name descname">Return</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.Return" title="Permalink to this definition">¶</a></dt>
+<dd><p>A return of an order</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference</strong> – Reference id.</p></li>
+<li><p><strong>amount</strong> – Amount of return in USD.</p></li>
+<li><p><strong>order_id</strong> – <code class="docutils literal notranslate"><span class="pre">Order.id</span></code> foreign-key.</p></li>
+<li><p><a class="reference internal" href="#nest.apis.fastspring.events.Return.order" title="nest.apis.fastspring.events.Return.order"><strong>order</strong></a> – The order this return belongs to.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="nest.engines.psql.models.Return.partial">
+<code class="sig-name descname">partial</code><a class="headerlink" href="#nest.engines.psql.models.Return.partial" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the return amount is not greater-than or equal to
+the original order total.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.engines.psql.models.User">
+<em class="property">class </em><code class="sig-prename descclassname">nest.engines.psql.models.</code><code class="sig-name descname">User</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>A user/customer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>email</strong> – The user’s email.</p></li>
+<li><p><strong>first</strong> – The user’s first name.</p></li>
+<li><p><strong>last</strong> – The user’s last name.</p></li>
+<li><p><strong>country_code</strong> – ISO 3166-1 alpha-2 (or 3) country code.</p></li>
+<li><p><strong>language_code</strong> – ISO 639-1 or ISO 639-2 language code.</p></li>
+<li><p><strong>created</strong> – Date of creation.</p></li>
+<li><p><strong>last_token_request</strong> – Date of last license reset.</p></li>
+<li><p><strong>subscribed</strong> – Plugged-In Membership status.</p></li>
+<li><p><strong>orders</strong> – List of orders belonging to this user.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="nest.engines.psql.models.User.earliest_order_date">
+<code class="sig-name descname">earliest_order_date</code><a class="headerlink" href="#nest.engines.psql.models.User.earliest_order_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date of first order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.models.User.highest_version_in_set">
+<code class="sig-name descname">highest_version_in_set</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.User.highest_version_in_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a set name, returns the highest <code class="docutils literal notranslate"><span class="pre">Product.version</span></code>
+of this set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – The set name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.models.User.owns_any_in_set">
+<code class="sig-name descname">owns_any_in_set</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.User.owns_any_in_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a set name, returns True if the user owns a product
+belonging to this set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – The set name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="nest.engines.psql.models.User.owns_any_paid">
+<code class="sig-name descname">owns_any_paid</code><a class="headerlink" href="#nest.engines.psql.models.User.owns_any_paid" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the user owns any product whose price is non-zero.</p>
+<p>Note that this does not necessarily mean that the user has
+paid money for any items, just that they own an item that has
+a non-zero price.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.engines.psql.models.User.owns_current_in_set">
+<code class="sig-name descname">owns_current_in_set</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.engines.psql.models.User.owns_current_in_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a set name, returns True if the user owns the most
+recent version belonging to this set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – The set name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="nest.engines.psql.models.User.products">
+<code class="sig-name descname">products</code><a class="headerlink" href="#nest.engines.psql.models.User.products" title="Permalink to this definition">¶</a></dt>
+<dd><p>Products belonging to this user.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="custom-api-sessions">
+<h2>Custom API Sessions<a class="headerlink" href="#custom-api-sessions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nest.apis.FastSpring">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.</code><code class="sig-name descname">FastSpring</code><span class="sig-paren">(</span><em class="sig-param">auth=None</em>, <em class="sig-param">hooks={}</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom <code class="docutils literal notranslate"><span class="pre">Session</span></code> to interact with FastSpring’s API.</p>
+<dl class="method">
+<dt id="nest.apis.FastSpring.get_events">
+<code class="sig-name descname">get_events</code><span class="sig-paren">(</span><em class="sig-param">type</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring.get_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields processed or unprocessed event data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> – Event type. Either <code class="docutils literal notranslate"><span class="pre">'processed'</span></code> or
+<code class="docutils literal notranslate"><span class="pre">'unprocessed'</span></code>.</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.FastSpring.get_orders">
+<code class="sig-name descname">get_orders</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring.get_orders" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields order data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> – Other positional arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.FastSpring.get_products">
+<code class="sig-name descname">get_products</code><span class="sig-paren">(</span><em class="sig-param">filter=[]</em>, <em class="sig-param">blacklist=[]</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring.get_products" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields product name, price, and alias information. Useful
+for updating the corresponding database model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span> <span class="o">=</span> <span class="n">FastSpring</span><span class="p">()</span>
+<span class="n">session</span><span class="o">.</span><span class="n">get_products</span><span class="p">(</span>
+    <span class="nb">filter</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ava-ds&quot;</span><span class="p">,</span> <span class="s2">&quot;ava-mc],</span>
+    <span class="n">blacklist</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bundles&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter</strong> – Whitelisted product ids.</p></li>
+<li><p><strong>blacklist</strong> – Blacklisted product</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.FastSpring.prefix">
+<em class="property">property </em><code class="sig-name descname">prefix</code><a class="headerlink" href="#nest.apis.FastSpring.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>URL to prefix on all requests. Since this is dedicated to
+FastSpring, it is (currently): ‘<a class="reference external" href="https://api.fastspring.com">https://api.fastspring.com</a>’.</p>
+<p>This property is <em>read-only</em> and has no setter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.FastSpring.request">
+<code class="sig-name descname">request</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">suffix</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>A normal request except that the
+<a class="reference internal" href="#nest.apis.FastSpring.prefix" title="nest.apis.FastSpring.prefix"><code class="xref py py-class docutils literal notranslate"><span class="pre">prefix</span></code></a> and suffix are joined
+to create the endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – HTTP Request method.</p></li>
+<li><p><strong>suffix</strong> – Joined to <a class="reference internal" href="#nest.apis.FastSpring.prefix" title="nest.apis.FastSpring.prefix"><code class="xref py py-class docutils literal notranslate"><span class="pre">prefix</span></code></a>.</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.FastSpring.update_event">
+<code class="sig-name descname">update_event</code><span class="sig-paren">(</span><em class="sig-param">id</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.FastSpring.update_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a <code class="docutils literal notranslate"><span class="pre">'POST'</span></code> request to  the <code class="docutils literal notranslate"><span class="pre">/events/</span></code> endpoint.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">session</span> <span class="o">=</span> <span class="n">FastSpring</span><span class="p">()</span>
+<span class="n">session</span><span class="o">.</span><span class="n">update_event</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+    <span class="s2">&quot;processed&quot;</span><span class="p">:</span> <span class="kc">True</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> – The event’s internal id.</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to <code class="docutils literal notranslate"><span class="pre">POST</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to <code class="docutils literal notranslate"><span class="pre">POST</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.Mailchimp">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.</code><code class="sig-name descname">Mailchimp</code><span class="sig-paren">(</span><em class="sig-param">auth=None</em>, <em class="sig-param">hooks={}</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom <code class="docutils literal notranslate"><span class="pre">Session</span></code> to interact with Mailchimp’s API.</p>
+<dl class="method">
+<dt id="nest.apis.Mailchimp.default_list">
+<em class="property">property </em><code class="sig-name descname">default_list</code><a class="headerlink" href="#nest.apis.Mailchimp.default_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since most of this API usage is dedicated to maintaining
+and modifying one list, this property acts as a default for
+requests that do not specify a list id.</p>
+<p>This property is the <strong>name</strong> of the list, which will be
+extracted from <a class="reference internal" href="#nest.apis.Mailchimp.lists" title="nest.apis.Mailchimp.lists"><code class="xref py py-class docutils literal notranslate"><span class="pre">lists</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.get_member">
+<code class="sig-name descname">get_member</code><span class="sig-paren">(</span><em class="sig-param">email</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp.get_member" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield a specific member of a list by email.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>email</strong> – The email of the member</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.get_members">
+<code class="sig-name descname">get_members</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp.get_members" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields members of a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> – Other positional arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to each <code class="docutils literal notranslate"><span class="pre">GET</span></code>
+request.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.lists">
+<em class="property">property </em><code class="sig-name descname">lists</code><a class="headerlink" href="#nest.apis.Mailchimp.lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict of Mailchimp list names to internal list ids.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.md5">
+<em class="property">classmethod </em><code class="sig-name descname">md5</code><span class="sig-paren">(</span><em class="sig-param">message</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp.md5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hash a message with md5.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.multijoin">
+<em class="property">classmethod </em><code class="sig-name descname">multijoin</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">*parts</em>, <em class="sig-param">seperator='/'</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp.multijoin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <code class="docutils literal notranslate"><span class="pre">urllib.parse.urljoin()</span></code>, except it takes a variable
+number of args and a variable seperator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – URL to prefix join to.</p></li>
+<li><p><strong>parts</strong> – Positional list of parts to join.</p></li>
+<li><p><strong>seperator</strong> – Seperator to join parts to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.prefix">
+<em class="property">property </em><code class="sig-name descname">prefix</code><a class="headerlink" href="#nest.apis.Mailchimp.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>URL to prefix on all requests. Since this is dedicated to
+Mailchimp, it is (currently):
+‘<a class="reference external" href="https://us14.api.mailchimp.com/3.0/">https://us14.api.mailchimp.com/3.0/</a>’.</p>
+<p>This property is <em>read-only</em> and has no setter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.Mailchimp.request">
+<code class="sig-name descname">request</code><span class="sig-paren">(</span><em class="sig-param">method</em>, <em class="sig-param">suffix</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.Mailchimp.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>A normal request except that the
+<a class="reference internal" href="#nest.apis.Mailchimp.prefix" title="nest.apis.Mailchimp.prefix"><code class="xref py py-class docutils literal notranslate"><span class="pre">prefix</span></code></a> and suffix are joined to
+create the endpoint.</p>
+<p>The list id for this request defaults to
+<a class="reference internal" href="#nest.apis.Mailchimp.default_list" title="nest.apis.Mailchimp.default_list"><code class="xref py py-class docutils literal notranslate"><span class="pre">default_list</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – HTTP Request method.</p></li>
+<li><p><strong>suffix</strong> – Joined to <a class="reference internal" href="#nest.apis.Mailchimp.prefix" title="nest.apis.Mailchimp.prefix"><code class="xref py py-class docutils literal notranslate"><span class="pre">prefix</span></code></a>.</p></li>
+<li><p><strong>args</strong> – Other positional arguments passed to request.</p></li>
+<li><p><strong>kwargs</strong> – Other keyword arguments passed to request. If
+<code class="docutils literal notranslate"><span class="pre">list</span></code> is included in kwargs, it will popped and used in
+place of the <a class="reference internal" href="#nest.apis.Mailchimp.default_list" title="nest.apis.Mailchimp.default_list"><code class="xref py py-class docutils literal notranslate"><span class="pre">default_list</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="api-webhook-events">
+<h2>API Webhook Events<a class="headerlink" href="#api-webhook-events" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-nest.apis.fastspring.events"></span><dl class="class">
+<dt id="nest.apis.fastspring.events.EventParser">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">EventParser</code><span class="sig-paren">(</span><em class="sig-param">generator</em>, <em class="sig-param">session=None</em>, <em class="sig-param">type_hint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.EventParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in a generator or other iterable object and spits
+constructs appropriate WebhookEvent subclasses.</p>
+<p>Any session or type hinting passed to this will be forwarded to
+resulting objects.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.fastspring.events.Order">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">Order</code><span class="sig-paren">(</span><em class="sig-param">data={}</em>, <em class="sig-param">session=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.Order" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nest.apis.fastspring.events.Order.customer">
+<em class="property">property </em><code class="sig-name descname">customer</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.customer" title="Permalink to this definition">¶</a></dt>
+<dd><p>The user/customer who paid for these items.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.discount">
+<em class="property">property </em><code class="sig-name descname">discount</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.discount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total discount amount in USD.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.gift">
+<em class="property">property </em><code class="sig-name descname">gift</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.gift" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if the intended recipient is not the purchaser.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.model">
+<em class="property">property </em><code class="sig-name descname">model</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructed database
+<a class="reference internal" href="#nest.engines.psql.models.Order" title="nest.engines.psql.models.Order"><code class="xref py py-class docutils literal notranslate"><span class="pre">Order</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.paths">
+<em class="property">property </em><code class="sig-name descname">paths</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of product paths or ids of the parent or triggering
+items of this order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.products">
+<em class="property">property </em><code class="sig-name descname">products</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.products" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of products in this order.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.recipients">
+<em class="property">property </em><code class="sig-name descname">recipients</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.recipients" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of users for whom these items are propogated to.</p>
+<p>Since FastSpring allows gifting of purchases, this list could,
+theoretically, be infinitely long. However, for the time
+being, we assume that the first recipient is the actual
+intended recipient of this purchase. Typically, this is also
+the <a class="reference internal" href="#nest.apis.fastspring.events.Order.customer" title="nest.apis.fastspring.events.Order.customer"><code class="xref py py-class docutils literal notranslate"><span class="pre">customer</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Order.total">
+<em class="property">property </em><code class="sig-name descname">total</code><a class="headerlink" href="#nest.apis.fastspring.events.Order.total" title="Permalink to this definition">¶</a></dt>
+<dd><p>Order amount total in USD.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.fastspring.events.Return">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">Return</code><span class="sig-paren">(</span><em class="sig-param">data={}</em>, <em class="sig-param">session=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.Return" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nest.apis.fastspring.events.Return.model">
+<em class="property">property </em><code class="sig-name descname">model</code><a class="headerlink" href="#nest.apis.fastspring.events.Return.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructed database
+<a class="reference internal" href="#nest.engines.psql.models.Return" title="nest.engines.psql.models.Return"><code class="xref py py-class docutils literal notranslate"><span class="pre">Return</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.Return.order">
+<em class="property">property </em><code class="sig-name descname">order</code><a class="headerlink" href="#nest.apis.fastspring.events.Return.order" title="Permalink to this definition">¶</a></dt>
+<dd><p>The original order this return belongs to.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.fastspring.events.SubscriptionActivated">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">SubscriptionActivated</code><span class="sig-paren">(</span><em class="sig-param">data={}</em>, <em class="sig-param">session=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.SubscriptionActivated" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nest.apis.fastspring.events.SubscriptionActivated.user">
+<em class="property">property </em><code class="sig-name descname">user</code><a class="headerlink" href="#nest.apis.fastspring.events.SubscriptionActivated.user" title="Permalink to this definition">¶</a></dt>
+<dd><p>The user who subscribed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.fastspring.events.SubscriptionDeactivated">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">SubscriptionDeactivated</code><span class="sig-paren">(</span><em class="sig-param">data={}</em>, <em class="sig-param">session=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.SubscriptionDeactivated" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nest.apis.fastspring.events.SubscriptionDeactivated.user">
+<em class="property">property </em><code class="sig-name descname">user</code><a class="headerlink" href="#nest.apis.fastspring.events.SubscriptionDeactivated.user" title="Permalink to this definition">¶</a></dt>
+<dd><p>The user who unsubscribed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nest.apis.fastspring.events.WebhookEvent">
+<em class="property">class </em><code class="sig-prename descclassname">nest.apis.fastspring.events.</code><code class="sig-name descname">WebhookEvent</code><span class="sig-paren">(</span><em class="sig-param">data={}</em>, <em class="sig-param">session=None</em>, <em class="sig-param">type_hint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for all webhook events of a FastSpring API Webhook
+event.</p>
+<p>If a session is provided, most of the properties will be valid new
+or existing database objects. Otherwise, the properties are the
+parsed webhook event data.</p>
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.convert">
+<em class="property">abstract </em><code class="sig-name descname">convert</code><span class="sig-paren">(</span><em class="sig-param">subclass</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert this <code class="docutils literal notranslate"><span class="pre">WebhookEvent</span></code> into a more refined subclass.</p>
+<p>Data and database session are passed to subclass’ constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>subclass</strong> – The derived class of a <code class="docutils literal notranslate"><span class="pre">WebhookEvent</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.is_order">
+<em class="property">abstract </em><code class="sig-name descname">is_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.is_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if webhook type is <code class="docutils literal notranslate"><span class="pre">'order.completed'</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.is_return">
+<em class="property">abstract </em><code class="sig-name descname">is_return</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.is_return" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if webhook type is <code class="docutils literal notranslate"><span class="pre">'return.created'</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.is_subscription_activated">
+<em class="property">abstract </em><code class="sig-name descname">is_subscription_activated</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.is_subscription_activated" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if webhook type is <code class="docutils literal notranslate"><span class="pre">'subscription.activated'</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.is_subscription_deactivated">
+<em class="property">abstract </em><code class="sig-name descname">is_subscription_deactivated</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.is_subscription_deactivated" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if webhook type is <code class="docutils literal notranslate"><span class="pre">'subscription.deactivated'</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.model">
+<em class="property">abstract property </em><code class="sig-name descname">model</code><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>The resulting database object, if any.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.to_order">
+<em class="property">abstract </em><code class="sig-name descname">to_order</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.to_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert this <code class="docutils literal notranslate"><span class="pre">WebhookEvent</span></code> to an
+<a class="reference internal" href="#nest.apis.fastspring.events.Order" title="nest.apis.fastspring.events.Order"><code class="xref py py-class docutils literal notranslate"><span class="pre">Order</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.to_return">
+<em class="property">abstract </em><code class="sig-name descname">to_return</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.to_return" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert this <code class="docutils literal notranslate"><span class="pre">WebhookEvent</span></code> to a
+<a class="reference internal" href="#nest.apis.fastspring.events.Return" title="nest.apis.fastspring.events.Return"><code class="xref py py-class docutils literal notranslate"><span class="pre">Return</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nest.apis.fastspring.events.WebhookEvent.to_subscription">
+<em class="property">abstract </em><code class="sig-name descname">to_subscription</code><span class="sig-paren">(</span><em class="sig-param">active</em><span class="sig-paren">)</span><a class="headerlink" href="#nest.apis.fastspring.events.WebhookEvent.to_subscription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert this <code class="docutils literal notranslate"><span class="pre">WebhookEvent</span></code> to an
+<a class="reference internal" href="#nest.apis.fastspring.events.SubscriptionActivated" title="nest.apis.fastspring.events.SubscriptionActivated"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubscriptionActivated</span></code></a> or
+<a class="reference internal" href="#nest.apis.fastspring.events.SubscriptionDeactivated" title="nest.apis.fastspring.events.SubscriptionDeactivated"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubscriptionDeactivated</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Nest</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#engines">Engines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nest.engines.psql.models">Database Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-api-sessions">Custom API Sessions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-webhook-events">API Webhook Events</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Nest’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Nikolaus Gullotta.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/api.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

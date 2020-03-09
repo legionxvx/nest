@@ -1,0 +1,11 @@
+image: debian
+
+before_script:
+  - apt update -qy
+  - apt install pipenv postgresql-12 redis-server
+  - python -V
+  - pipenv install && pipenv install --dev
+
+test:
+  script:
+    - pipenv run pytest
